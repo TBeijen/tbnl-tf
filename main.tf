@@ -12,27 +12,10 @@ provider "aws" {
   region = "eu-west-1"
 }
 
-locals {
-  state_bucket = "tfstate-${var.project}-${var.environment}"
-}
 
-resource "aws_s3_bucket" "terraform_state" {
-  bucket        = local.state_bucket
-  force_destroy = false
-}
+module "remote_state" {
+  source = "./modules/aws_s3_remote_state"
 
-resource "aws_s3_bucket_versioning" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-    }
-  }
+  project     = var.project
+  environment = var.environment
 }
