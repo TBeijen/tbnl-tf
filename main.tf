@@ -17,8 +17,11 @@ terraform {
 }
 
 locals {
-  state_bucket         = "tfstate-${var.project}-${var.environment}"
-  state_dynamodb_table = "tfstate-${var.project}-${var.environment}"
+  state_bucket            = "tfstate-${var.project}-${var.environment}"
+  state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
+  provider_secrets = toset([for name in [
+    "digital_ocean"
+  ]: "/${var.project}/${var.environment}/${name}"])
 }
 
 provider "aws" {
@@ -30,4 +33,25 @@ module "remote_state" {
 
   bucket_name    = local.state_bucket
   dynamodb_table = local.state_dynamodb_table
+}
+
+# When adding a new secret: Run once with -target=module.provider_secret
+module "provider_secret" {
+  source  = "terraform-aws-modules/ssm-parameter/aws"
+  version = "1.1.0"
+
+  for_each = local.provider_secrets
+
+  name                 = each.key
+  value                = "api-token-value"
+  type                 = "SecureString"
+  secure_type          = true
+  description          = "Digital Ocean API token"
+  ignore_value_changes = true
+}
+
+data "aws_ssm_parameter" "provider_secret" {
+  for_each = local.provider_secrets
+
+  name = each.key
 }
