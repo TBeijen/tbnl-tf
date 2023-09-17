@@ -1,7 +1,7 @@
-output "bucket_id" {
-    value = module.remote_state.bucket_id
+output "state_bucket_name" {
+    value = local.state_bucket
 }
 
-output "dynamodb_table_id" {
-    value = module.remote_state.dynamodb_table_id
+output "state_dynamodb_table_name" {
+    value = local.state_dynamodb_table
 }

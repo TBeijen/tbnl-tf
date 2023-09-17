@@ -1,11 +1,5 @@
-
-locals {
-  state_bucket   = "tfstate-${var.project}-${var.environment}"
-  dynamodb_table = "tfstate-${var.project}-${var.environment}"
-}
-
 resource "aws_s3_bucket" "terraform_state" {
-  bucket        = local.state_bucket
+  bucket        = var.bucket_name
   force_destroy = false
 }
 
@@ -26,7 +20,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
 }
 
 resource "aws_dynamodb_table" "terraform_locks" {
-  name         = local.dynamodb_table
+  name         = var.dynamodb_table
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
   attribute {

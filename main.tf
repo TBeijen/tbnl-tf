@@ -6,16 +6,28 @@ terraform {
       version = "~> 5.17.0"
     }
   }
+  # Need to come up with hack to configure remote state based on vars or workspace
+  backend "s3" {
+    bucket         = "tfstate-tbnl-tf-test"
+    key            = "test/terraform.tfstate"
+    region         = "eu-west-1"
+    dynamodb_table = "tfstate-tbnl-tf-test"
+    encrypt        = true
+  }
+}
+
+locals {
+  state_bucket         = "tfstate-${var.project}-${var.environment}"
+  state_dynamodb_table = "tfstate-${var.project}-${var.environment}"
 }
 
 provider "aws" {
   region = "eu-west-1"
 }
 
-
 module "remote_state" {
   source = "./modules/aws_s3_remote_state"
 
-  project     = var.project
-  environment = var.environment
+  bucket_name    = local.state_bucket
+  dynamodb_table = local.state_dynamodb_table
 }

@@ -1,11 +1,7 @@
-variable "project" {
-  type        = string
-  default     = "my-project"
-  description = "Project name to use in resource naming"
+variable "bucket_name" {
+  type = string
 }
 
-variable "environment" {
-  type        = string
-  default     = "test"
-  description = "Environment, used in resource naming"
+variable "dynamodb_table" {
+  type = string
 }
