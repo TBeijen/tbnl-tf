@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.17.0"
     }
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.30.0"
+    }
   }
   # Need to come up with hack to configure remote state based on vars or workspace
   backend "s3" {
@@ -19,9 +23,9 @@ terraform {
 locals {
   state_bucket            = "tfstate-${var.project}-${var.environment}"
   state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
-  provider_secrets = toset([for name in [
+  provider_secrets = {for name in [
     "digital_ocean"
-  ]: "/${var.project}/${var.environment}/${name}"])
+  ]: name => "/${var.project}/${var.environment}/${name}"}
 }
 
 provider "aws" {
@@ -42,7 +46,7 @@ module "provider_secret" {
 
   for_each = local.provider_secrets
 
-  name                 = each.key
+  name                 = each.value
   value                = "api-token-value"
   type                 = "SecureString"
   secure_type          = true
@@ -53,5 +57,14 @@ module "provider_secret" {
 data "aws_ssm_parameter" "provider_secret" {
   for_each = local.provider_secrets
 
-  name = each.key
+  name = each.value
+}
+
+# Configure the DigitalOcean Provider
+provider "digitalocean" {
+  token = data.aws_ssm_parameter.provider_secret["digital_ocean"].value
+}
+
+data "digitalocean_droplets" "all" {
+
 }
