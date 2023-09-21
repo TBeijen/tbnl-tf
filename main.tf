@@ -68,3 +68,21 @@ provider "digitalocean" {
 data "digitalocean_droplets" "all" {
 
 }
+
+data "digitalocean_image" "ubuntu_22_04" {
+  slug = "ubuntu-22-04-x64"
+}
+
+resource "digitalocean_ssh_key" "ssh2022" {
+  name       = "tibobeijen+ssh2022_ed25519"
+  public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
+}
+
+# Create a new Droplet using the SSH key
+# resource "digitalocean_droplet" "poc_1" {
+#   image    = data.digitalocean_image.ubuntu_22_04.id
+#   name     = "poc-1"
+#   region   = "ams2"
+#   size     = "s-1vcpu-1gb"
+#   ssh_keys = [digitalocean_ssh_key.ssh2022.fingerprint]
+# }
