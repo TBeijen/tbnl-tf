@@ -82,6 +82,7 @@ module "server_poc" {
   
   enabled = true
 
-  name  = "poc"
-  cloud = "digital_ocean"
+  name           = "poc"
+  cloud          = "digital_ocean"
+  ssh_public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
 }

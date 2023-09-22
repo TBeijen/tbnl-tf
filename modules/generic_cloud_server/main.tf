@@ -7,20 +7,22 @@ terraform {
   }
 }
 
-resource "random_pet" "server" {
-  count = local.count
+resource "random_pet" "cloud_server" {
+  count = var.enabled ? 1 : 0
 
   length  = 1
   keepers = {}
 }
 
 locals {
-  count = var.enabled ? 1 : 0
-
   name = format("%s%s", 
     var.name,
-    (var.add_random_pet_suffix ? "-${random_pet.server[0].id}" : "")
+    (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
+
+  user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
+    auth_key = try(tailscale_tailnet_key.cloud_server[0].key, "")
+  })
 
   tailscale_tags = ["tag:cloud-server"]
 }
@@ -35,3 +37,4 @@ resource "tailscale_tailnet_key" "cloud_server" {
   ephemeral     = true
   tags          = local.tailscale_tags
 }
+

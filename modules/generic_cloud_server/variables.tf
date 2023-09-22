@@ -15,6 +15,12 @@ variable "add_random_pet_suffix" {
   description = "If true, resources will have random pet name suffix"
 }
 
+variable "ssh_public_key" {
+  type        = string
+  default     = ""
+  description = "Leave empty to not add a ssh key"
+}
+
 variable "cloud" {
   type        = string
   description = "String indicating cloud type"
