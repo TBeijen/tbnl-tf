@@ -9,11 +9,6 @@ variable "name" {
   description = "Server name"
 }
 
-variable "add_random_pet_suffix" {
-  type        = bool
-  description = "If true, resources will have random pet name suffix"
-}
-
 variable "ssh_public_key" {
   type        = string
   default     = ""

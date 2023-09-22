@@ -27,7 +27,6 @@ terraform {
 locals {
   state_bucket            = "tfstate-${var.project}-${var.environment}"
   state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
-  tailscale_tags          = ["tag:cloud-server"]
   provider_secrets = {for name in [
     "digital_ocean",
     "tailscale_client_id",
@@ -78,11 +77,11 @@ provider "tailscale" {
   scopes              = ["devices"]
 }
 
+module "server_poc" {
+  source = "./modules/generic_cloud_server"
+  
+  enabled = true
 
-resource "tailscale_tailnet_key" "cloud_server" {
-  reusable      = true
-  preauthorized = true
-  # Using ephemeral to have servers automatically de-register from tailscale when removed
-  ephemeral     = true
-  tags          = local.tailscale_tags
+  name  = "poc"
+  cloud = "digital_ocean"
 }
