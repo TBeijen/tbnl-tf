@@ -67,58 +67,10 @@ data "aws_ssm_parameter" "provider_secret" {
   name = each.value
 }
 
-# Configure the DigitalOcean Provider
+# Configure providers
 provider "digitalocean" {
   token = data.aws_ssm_parameter.provider_secret["digital_ocean"].value
 }
-
-data "digitalocean_droplets" "all" {
-
-}
-
-data "digitalocean_image" "ubuntu_22_04" {
-  slug = "ubuntu-22-04-x64"
-}
-
-resource "digitalocean_ssh_key" "ssh2022" {
-  name       = "tibobeijen+ssh2022_ed25519"
-  public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
-}
-
-# Create a new Droplet using the SSH key
-# resource "digitalocean_droplet" "poc_1" {
-#   image     = data.digitalocean_image.ubuntu_22_04.id
-#   name      = "poc-1"
-#   region    = "ams2"
-#   size      = "s-1vcpu-1gb"
-#   ssh_keys  = [digitalocean_ssh_key.ssh2022.fingerprint]
-#   user_data = templatefile("${path.root}/templates/cloud-config.yaml.tpl", {
-#     auth_key = tailscale_tailnet_key.cloud_server.key
-#   })
-# }
-
-# resource "digitalocean_firewall" "poc" {
-#   name = "tbnl-egress-only"
-
-#   droplet_ids = [digitalocean_droplet.poc_1.id]
-
-#   outbound_rule {
-#     protocol              = "tcp"
-#     port_range            = "1-65535"
-#     destination_addresses = ["0.0.0.0/0", "::/0"]
-#   }
-
-#   outbound_rule {
-#     protocol              = "udp"
-#     port_range            = "1-65535"
-#     destination_addresses = ["0.0.0.0/0", "::/0"]
-#   }
-
-#   outbound_rule {
-#     protocol              = "icmp"
-#     destination_addresses = ["0.0.0.0/0", "::/0"]
-#   }
-# }
 
 provider "tailscale" {
   oauth_client_id     = data.aws_ssm_parameter.provider_secret["tailscale_client_id"].value
@@ -126,8 +78,11 @@ provider "tailscale" {
   scopes              = ["devices"]
 }
 
+
 resource "tailscale_tailnet_key" "cloud_server" {
   reusable      = true
   preauthorized = true
+  # Using ephemeral to have servers automatically de-register from tailscale when removed
+  ephemeral     = true
   tags          = local.tailscale_tags
 }
