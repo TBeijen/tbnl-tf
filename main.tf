@@ -9,6 +9,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.30.0"
     }
+    tailscale = {
+      source = "tailscale/tailscale"
+      version = "~> 0.13.10"
+    }    
   }
   # Need to come up with hack to configure remote state based on vars or workspace
   backend "s3" {
@@ -23,8 +27,11 @@ terraform {
 locals {
   state_bucket            = "tfstate-${var.project}-${var.environment}"
   state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
+  tailscale_tags          = ["tag:cloud-server"]
   provider_secrets = {for name in [
-    "digital_ocean"
+    "digital_ocean",
+    "tailscale_client_id",
+    "tailscale_client_secret",
   ]: name => "/${var.project}/${var.environment}/${name}"}
 }
 
@@ -39,7 +46,7 @@ module "remote_state" {
   dynamodb_table = local.state_dynamodb_table
 }
 
-# When adding a new secret: Run once with -target=module.provider_secret
+# When adding a new secret: Run once with --target=module.provider_secret
 module "provider_secret" {
   source  = "terraform-aws-modules/ssm-parameter/aws"
   version = "1.1.0"
@@ -79,10 +86,48 @@ resource "digitalocean_ssh_key" "ssh2022" {
 }
 
 # Create a new Droplet using the SSH key
-# resource "digitalocean_droplet" "poc_1" {
-#   image    = data.digitalocean_image.ubuntu_22_04.id
-#   name     = "poc-1"
-#   region   = "ams2"
-#   size     = "s-1vcpu-1gb"
-#   ssh_keys = [digitalocean_ssh_key.ssh2022.fingerprint]
-# }
+resource "digitalocean_droplet" "poc_1" {
+  image     = data.digitalocean_image.ubuntu_22_04.id
+  name      = "poc-1"
+  region    = "ams2"
+  size      = "s-1vcpu-1gb"
+  ssh_keys  = [digitalocean_ssh_key.ssh2022.fingerprint]
+  user_data = templatefile("${path.root}/templates/cloud-config.yaml.tpl", {
+    auth_key = tailscale_tailnet_key.cloud_server.key
+  })
+}
+
+resource "digitalocean_firewall" "poc" {
+  name = "tbnl-egress-only"
+
+  droplet_ids = [digitalocean_droplet.poc_1.id]
+
+  outbound_rule {
+    protocol              = "tcp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  outbound_rule {
+    protocol              = "udp"
+    port_range            = "1-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  outbound_rule {
+    protocol              = "icmp"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+}
+
+provider "tailscale" {
+  oauth_client_id     = data.aws_ssm_parameter.provider_secret["tailscale_client_id"].value
+  oauth_client_secret = data.aws_ssm_parameter.provider_secret["tailscale_client_secret"].value
+  scopes              = ["devices"]
+}
+
+resource "tailscale_tailnet_key" "cloud_server" {
+  reusable      = true
+  preauthorized = true
+  tags          = local.tailscale_tags
+}
