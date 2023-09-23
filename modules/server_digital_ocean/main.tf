@@ -1,27 +1,34 @@
+terraform {
+  required_providers {
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.30.0"
+    }
+  }
+}
+
 data "digitalocean_image" "ubuntu_22_04" {
   count = var.enabled ? 1 : 0
 
   slug = "ubuntu-22-04-x64"
 }
 
-resource "digitalocean_ssh_key" "default" {
-  count = local.count && var.ssh_public_key != ""
+data "digitalocean_ssh_key" "default" {
+  count = (var.enabled && var.ssh_key_name != "") ? 1 : 0
 
-  name       = var.name
-  public_key = var.ssh_public_key
+  name = var.ssh_key_name
 }
 
 resource "digitalocean_droplet" "default" {
   count = var.enabled ? 1 : 0
 
-  image     = data.digitalocean_image.ubuntu_22_04.id
+  image     = data.digitalocean_image.ubuntu_22_04[0].id
   name      = var.name
   region    = "ams2"
-  size      = "s-1vcpu-1gb"
-  ssh_keys  = var.ssh_public_key != "" ? [digitalocean_ssh_key.default[0].fingerprint] : []
-#   user_data = templatefile("${path.root}/templates/cloud-config.yaml.tpl", {
-#     auth_key = tailscale_tailnet_key.cloud_server.key
-#   })
+  # size      = "s-1vcpu-1gb"
+  size      = "s-1vcpu-2gb"
+  ssh_keys  = var.ssh_key_name != "" ? [data.digitalocean_ssh_key.default[0].fingerprint] : []
+  user_data = var.user_data
 }
 
 # Egress only firewall, dedicated to single host

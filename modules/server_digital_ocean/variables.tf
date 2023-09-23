@@ -9,8 +9,14 @@ variable "name" {
   description = "Server name"
 }
 
-variable "ssh_public_key" {
+variable "ssh_key_name" {
   type        = string
   default     = ""
   description = "Leave empty to not add a ssh key"
+}
+
+variable "user_data" {
+  type        = string
+  default     = ""
+  description = "User data to bootstrap server"
 }

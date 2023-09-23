@@ -3,6 +3,9 @@
 # file, but all other lines that begin with a # are optional comments.
 
 runcmd:
+  # Tailscale setup
+  # ===============
+  # 
   # One-command install, from https://tailscale.com/download/
   - ['sh', '-c', 'curl -fsSL https://tailscale.com/install.sh | sh']
   # Set sysctl settings for IP forwarding (useful when configuring an exit node)
@@ -15,3 +18,8 @@ runcmd:
   - ['tailscale', 'set', '--ssh']
   # Optional: Include this line to configure this machine as an exit node
   # - ['tailscale', 'set', '--advertise-exit-node']
+
+  # K3S setup
+  # =========
+  #
+  - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']

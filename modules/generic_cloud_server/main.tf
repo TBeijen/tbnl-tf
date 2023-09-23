@@ -38,3 +38,12 @@ resource "tailscale_tailnet_key" "cloud_server" {
   tags          = local.tailscale_tags
 }
 
+module "digital_ocean_server" {
+  source = "../server_digital_ocean"
+  
+  enabled = (var.enabled && var.cloud == "digital_ocean")
+
+  name           = local.name
+  ssh_key_name   = var.ssh_key_name
+  user_data      = local.user_data
+}

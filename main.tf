@@ -77,12 +77,28 @@ provider "tailscale" {
   scopes              = ["devices"]
 }
 
-module "server_poc" {
+# Set digital ocean key
+resource "digitalocean_ssh_key" "default" {
+  name       = "tbnl_ed25519"
+  public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
+}
+
+module "server_poc_1" {
   source = "./modules/generic_cloud_server"
   
   enabled = true
 
-  name           = "poc"
+  name           = "poc-1"
   cloud          = "digital_ocean"
-  ssh_public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
+  ssh_key_name   = digitalocean_ssh_key.default.name
+}
+
+module "server_poc_2" {
+  source = "./modules/generic_cloud_server"
+  
+  enabled = false
+
+  name           = "poc-2"
+  cloud          = "digital_ocean"
+  ssh_key_name   = digitalocean_ssh_key.default.name
 }
