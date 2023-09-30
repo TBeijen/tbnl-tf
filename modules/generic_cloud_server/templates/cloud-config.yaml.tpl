@@ -2,6 +2,31 @@
 # The above header must generally appear on the first line of a cloud config
 # file, but all other lines that begin with a # are optional comments.
 
+write_files:
+- path: /usr/bin/po_notify.sh
+  owner: root:root
+  permissions: '0777'
+  content: |
+    #!/bin/bash
+    curl -s -F "token=${pushover_api_token}" \
+    -F "user=${pushover_user_key}" \
+    -F "title=$1" \
+    -F "message=$2" https://api.pushover.net/1/messages.json
+- path: /etc/systemd/system/notifyReboot.service
+  owner: root:root
+  permissions: '0644'
+  content: |
+    [Unit]
+    Description=Send PushOver notification on reboot
+    Requires=network-online.target
+    After=network-online.target
+
+    [Service]
+    ExecStart=/usr/bin/po_notify.sh "Server rebooted" "The server %H has rebooted"
+
+    [Install]
+    WantedBy=multi-user.target
+
 runcmd:
   # Tailscale setup
   # ===============
@@ -13,7 +38,7 @@ runcmd:
   # Generate an auth key from your Admin console
   # https://login.tailscale.com/admin/settings/keys
   # and replace the placeholder below
-  - ['tailscale', 'up', '--authkey=${auth_key}']
+  - ['tailscale', 'up', '--authkey=${tailscale_auth_key}']
   # Optional: Include this line to make this node available over Tailscale SSH
   - ['tailscale', 'set', '--ssh']
   # Optional: Include this line to configure this machine as an exit node
@@ -22,4 +47,4 @@ runcmd:
   # K3S setup
   # =========
   #
-  - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']
+  # - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']

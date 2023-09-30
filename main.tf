@@ -31,6 +31,8 @@ locals {
     "digital_ocean",
     "tailscale_client_id",
     "tailscale_client_secret",
+    "pushover_user_key",
+    "pushover_api_key_tbnl_infra",
   ]: name => "/${var.project}/${var.environment}/${name}"}
 }
 
@@ -88,9 +90,11 @@ module "server_poc_1" {
   
   enabled = true
 
-  name           = "poc-1"
-  cloud          = "digital_ocean"
-  ssh_key_name   = digitalocean_ssh_key.default.name
+  name               = "poc-1"
+  cloud              = "digital_ocean"
+  ssh_key_name       = digitalocean_ssh_key.default.name
+  pushover_user_key  = data.aws_ssm_parameter.provider_secret["pushover_user_key"].value
+  pushover_api_token = data.aws_ssm_parameter.provider_secret["pushover_api_key_tbnl_infra"].value
 }
 
 module "server_poc_2" {
@@ -98,7 +102,9 @@ module "server_poc_2" {
   
   enabled = false
 
-  name           = "poc-2"
-  cloud          = "digital_ocean"
-  ssh_key_name   = digitalocean_ssh_key.default.name
+  name               = "poc-2"
+  cloud              = "digital_ocean"
+  ssh_key_name       = digitalocean_ssh_key.default.name
+  pushover_user_key  = data.aws_ssm_parameter.provider_secret["pushover_user_key"].value
+  pushover_api_token = data.aws_ssm_parameter.provider_secret["pushover_api_key_tbnl_infra"].value
 }

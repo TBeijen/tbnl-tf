@@ -21,6 +21,19 @@ variable "ssh_key_name" {
   description = "Ssh key to load and configure into server"
 }
 
+variable "pushover_user_key" {
+  type        = string
+  default     = ""
+  description = "User key to send PushOver notifications"
+}
+
+variable "pushover_api_token" {
+  type        = string
+  default     = ""
+  description = "API token to send PushOver notifications"
+}
+
+
 variable "cloud" {
   type        = string
   description = "String indicating cloud type"

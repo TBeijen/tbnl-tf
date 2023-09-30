@@ -21,7 +21,9 @@ locals {
   )
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
-    auth_key = try(tailscale_tailnet_key.cloud_server[0].key, "")
+    tailscale_auth_key = try(tailscale_tailnet_key.cloud_server[0].key, ""),
+    pushover_user_key = var.pushover_user_key
+    pushover_api_token = var.pushover_api_token
   })
 
   tailscale_tags = ["tag:cloud-server"]
