@@ -44,7 +44,19 @@ runcmd:
   # Optional: Include this line to configure this machine as an exit node
   # - ['tailscale', 'set', '--advertise-exit-node']
 
+  - ['/usr/bin/po_notify.sh', 'Tailscale installed', 'Installed Tailscale on server ${name}']
+
   # K3S setup
   # =========
   #
-  # - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']
+  - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']
+
+  - ['/usr/bin/po_notify.sh', 'K3S installed', 'Installed K3S on server ${name}']
+
+  # Install ArgoCD
+  # ==============
+  #
+  - ['kubectl', 'create', 'namespace', 'argocd']
+  - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_source}']
+
+  - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${name}']
