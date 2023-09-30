@@ -27,7 +27,7 @@ terraform {
 locals {
   state_bucket            = "tfstate-${var.project}-${var.environment}"
   state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
-  provider_secrets = {for name in [
+  project_secrets = {for name in [
     "digital_ocean",
     "tailscale_client_id",
     "tailscale_client_secret",
@@ -48,11 +48,11 @@ module "remote_state" {
 }
 
 # When adding a new secret: Run once with --target=module.provider_secret
-module "provider_secret" {
+module "secret" {
   source  = "terraform-aws-modules/ssm-parameter/aws"
   version = "1.1.0"
 
-  for_each = local.provider_secrets
+  for_each = local.project_secrets
 
   name                 = each.value
   value                = "api-token-value"
@@ -62,20 +62,20 @@ module "provider_secret" {
   ignore_value_changes = true
 }
 
-data "aws_ssm_parameter" "provider_secret" {
-  for_each = local.provider_secrets
+data "aws_ssm_parameter" "secret" {
+  for_each = local.project_secrets
 
   name = each.value
 }
 
 # Configure providers
 provider "digitalocean" {
-  token = data.aws_ssm_parameter.provider_secret["digital_ocean"].value
+  token = data.aws_ssm_parameter.secret["digital_ocean"].value
 }
 
 provider "tailscale" {
-  oauth_client_id     = data.aws_ssm_parameter.provider_secret["tailscale_client_id"].value
-  oauth_client_secret = data.aws_ssm_parameter.provider_secret["tailscale_client_secret"].value
+  oauth_client_id     = data.aws_ssm_parameter.secret["tailscale_client_id"].value
+  oauth_client_secret = data.aws_ssm_parameter.secret["tailscale_client_secret"].value
   scopes              = ["devices"]
 }
 
@@ -93,8 +93,8 @@ module "server_poc_1" {
   name               = "poc-1"
   cloud              = "digital_ocean"
   ssh_key_name       = digitalocean_ssh_key.default.name
-  pushover_user_key  = data.aws_ssm_parameter.provider_secret["pushover_user_key"].value
-  pushover_api_token = data.aws_ssm_parameter.provider_secret["pushover_api_key_tbnl_infra"].value
+  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
+  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
 }
 
 module "server_poc_2" {
@@ -105,6 +105,6 @@ module "server_poc_2" {
   name               = "poc-2"
   cloud              = "digital_ocean"
   ssh_key_name       = digitalocean_ssh_key.default.name
-  pushover_user_key  = data.aws_ssm_parameter.provider_secret["pushover_user_key"].value
-  pushover_api_token = data.aws_ssm_parameter.provider_secret["pushover_api_key_tbnl_infra"].value
+  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
+  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
 }
