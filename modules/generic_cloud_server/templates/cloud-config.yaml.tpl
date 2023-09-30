@@ -28,6 +28,12 @@ write_files:
     WantedBy=multi-user.target
 
 runcmd:
+  # Systemd setup
+  #
+  # Activate notify on boot service
+  - ['systemctl', 'daemon-reload']
+  - ['systemctl', 'enable', 'notifyReboot.service']
+
   # Tailscale setup
   # ===============
   # 
@@ -60,3 +66,24 @@ runcmd:
   - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_source}']
 
   - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${name}']
+
+  # Updates & disable auto-update
+  # =============================
+  #
+  - ['systemctl', 'stop', 'unattended-upgrades.service']
+  - ['systemctl', 'disable', 'unattended-upgrades.service']
+  - |
+    export NEEDRESTART_SUSPEND=suspend
+    apt -s dist-upgrade | grep "^Inst" | grep -i securi | awk -F " " {'print $2'} | xargs apt install -y
+  
+  - ['/usr/bin/po_notify.sh', 'Security updates installed', 'Installed security updates on server ${name}.']
+
+  # (Needrestart seems to always prevent interactive prompt when kernel update requires reboot, so triggering reboot ourselves.)
+  - |
+    if [ -f /var/run/reboot-required ]; then
+      /usr/bin/po_notify.sh "Rebooting" "Rebooting server ${name}"
+      reboot now
+    else
+      /usr/bin/po_notify.sh "Restarting services" "Executing needrestart on server ${name}"
+      needrestart -r a
+    fi
