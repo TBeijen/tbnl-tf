@@ -15,14 +15,17 @@ resource "random_pet" "cloud_server" {
 }
 
 locals {
-  name = format("%s%s", 
+  # Instance name is used to help identify generations of instances, 
+  # e.g. in Tailscale where previous identical machine remains in overview for a period
+  instance_name = format("%s%s", 
     var.name,
     (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
-    argocd_source = "https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.4/manifests/install.yaml",
-    name = local.name,
+    argocd_install_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml",
+    argocd_app_of_apps_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/app-of-apps.yaml",
+    name = local.instance_name,
     tailscale_auth_key = try(tailscale_tailnet_key.cloud_server[0].key, ""),
     pushover_user_key = var.pushover_user_key
     pushover_api_token = var.pushover_api_token
@@ -34,7 +37,7 @@ locals {
 resource "tailscale_tailnet_key" "cloud_server" {
   count = var.enabled ? 1 : 0
 
-  description   = var.name
+  description   = local.instance_name
   reusable      = true
   preauthorized = true
   # Using ephemeral to have servers automatically de-register from tailscale when removed
@@ -47,7 +50,7 @@ module "digital_ocean_server" {
   
   enabled = (var.enabled && var.cloud == "digital_ocean")
 
-  name           = local.name
+  name           = local.instance_name
   ssh_key_name   = var.ssh_key_name
   user_data      = local.user_data
 }

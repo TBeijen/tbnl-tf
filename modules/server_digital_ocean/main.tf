@@ -25,10 +25,13 @@ resource "digitalocean_droplet" "default" {
   image     = data.digitalocean_image.ubuntu_22_04[0].id
   name      = var.name
   region    = "ams2"
-  # size      = "s-1vcpu-1gb"
   size      = "s-1vcpu-2gb"
   ssh_keys  = var.ssh_key_name != "" ? [data.digitalocean_ssh_key.default[0].fingerprint] : []
   user_data = var.user_data
+
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 }
 
 # Egress only firewall, dedicated to single host

@@ -63,7 +63,8 @@ runcmd:
   # ==============
   #
   - ['kubectl', 'create', 'namespace', 'argocd']
-  - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_source}']
+  - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_install_source}']
+  - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_app_of_apps_source}']
 
   - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${name}']
 
