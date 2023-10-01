@@ -9,6 +9,12 @@ variable "name" {
   description = "Server name"
 }
 
+variable "environment" {
+  type        = string
+  default     = "prod"
+  description = "Environment, used in resource naming"
+}
+
 variable "add_random_pet_suffix" {
   type        = bool
   default     = true

@@ -6,6 +6,6 @@ variable "project" {
 
 variable "environment" {
   type        = string
-  default     = "test"
+  default     = "prod"
   description = "Environment, used in resource naming"
 }

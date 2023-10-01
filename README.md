@@ -1,5 +1,17 @@
 # tbnl-tf
 
+## Setup
+
+Start with local Terraform state, provision remote storage:
+
+```sh
+# Be sure to comment out the backend block in terraform code
+terraform init
+terraform apply --target=module.remote_state
+```
+
+Populate SSM parameter secrets via AWS console:
+
 
 ## Resources:
 
@@ -14,6 +26,9 @@ kubectl create namespace argocd
 # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.4/manifests/install.yaml
 kubectl apply -n argocd -f https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml
+
+# Obtain configured secrets
+aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recursive --output json
 ```
 
 ## TODO

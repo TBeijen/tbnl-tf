@@ -15,10 +15,11 @@ resource "random_pet" "cloud_server" {
 }
 
 locals {
+  name = "${var.environment}-${var.name}"
   # Instance name is used to help identify generations of instances, 
   # e.g. in Tailscale where previous identical machine remains in overview for a period
   instance_name = format("%s%s", 
-    var.name,
+    local.name,
     (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
 

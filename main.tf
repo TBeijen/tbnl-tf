@@ -16,10 +16,10 @@ terraform {
   }
   # Need to come up with hack to configure remote state based on vars or workspace
   backend "s3" {
-    bucket         = "tfstate-tbnl-tf-test"
-    key            = "test/terraform.tfstate"
+    bucket         = "tfstate-tbnl-tf-prod"
+    key            = "prod/terraform.tfstate"
     region         = "eu-west-1"
-    dynamodb_table = "tfstate-tbnl-tf-test"
+    dynamodb_table = "tfstate-tbnl-tf-prod"
     encrypt        = true
   }
 }
@@ -33,14 +33,14 @@ locals {
     "tailscale_client_secret",
     "pushover_user_key",
     "pushover_api_key_tbnl_infra",
-  ]: name => "/${var.project}/${var.environment}/${name}"}
+  ]: name => "/${var.project}/${var.environment}/secret/${name}"}
 }
 
 provider "aws" {
   region = "eu-west-1"
 }
 
-module "remote_state" {
+module "terraform_state" {
   source = "./modules/aws_s3_remote_state"
 
   bucket_name    = local.state_bucket
@@ -81,16 +81,17 @@ provider "tailscale" {
 
 # Set digital ocean key
 resource "digitalocean_ssh_key" "default" {
-  name       = "tbnl_ed25519"
+  name       = "${var.environment}-tbnl_ed25519"
   public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
 }
 
 module "server_poc_1" {
   source = "./modules/generic_cloud_server"
   
-  enabled = true
+  enabled = false
 
   name               = "poc-1"
+  environment        = var.environment
   cloud              = "digital_ocean"
   ssh_key_name       = digitalocean_ssh_key.default.name
   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
@@ -103,6 +104,7 @@ module "server_poc_2" {
   enabled = false
 
   name               = "poc-2"
+  environment        = var.environment
   cloud              = "digital_ocean"
   ssh_key_name       = digitalocean_ssh_key.default.name
   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value

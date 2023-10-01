@@ -6,7 +6,7 @@ variable "enabled" {
 
 variable "name" {
   type        = string
-  description = "Server name"
+  description = "Server name. Expected to be unique, so should contain environment and/or unique parts if applicable."
 }
 
 variable "ssh_key_name" {
