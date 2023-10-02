@@ -59,6 +59,14 @@ runcmd:
 
   - ['/usr/bin/po_notify.sh', 'K3S installed', 'Installed K3S on server ${name}']
 
+  # AWS CLI & store kubeconfig
+  # ==========================
+  #
+  - |
+    export NEEDRESTART_SUSPEND=suspend
+    apt install awscli -y
+
+
   # Install ArgoCD
   # ==============
   #

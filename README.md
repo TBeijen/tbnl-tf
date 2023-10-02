@@ -34,6 +34,7 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 ## TODO
 
 * Adapt and write kubeconfig to allow use outside of VM (using tailscale hostname as server)
+* Script to download kubeconfig(s) from ssm
 * GitOps repo, have Argo manage itself
 * Split blue/green, propagate 'cluster name' into app-of-apps, controlling ingress hostnames etc.
 * IAM policy and user for ESO
