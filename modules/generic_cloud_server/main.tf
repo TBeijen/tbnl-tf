@@ -18,8 +18,9 @@ resource "random_pet" "cloud_server" {
   keepers = {}
 }
 
-locals {
+locals { 
   name = "${var.environment}-${var.name}"
+
   # Instance name is used to help identify generations of instances, 
   # e.g. in Tailscale where previous identical machine remains in overview for a period
   instance_name = format("%s%s", 
@@ -27,12 +28,17 @@ locals {
     (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
 
+  aws_resources_common_name = "${var.project}-${var.environment}-${local.instance_name}"
+
+  aws_ssm_target_kubeconfig_path = "/${var.project}/${var.environment}/kubeconfig/${local.name}"
+  aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secrets/*"
+
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
     argocd_install_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml"
     argocd_app_of_apps_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/app-of-apps.yaml"
     aws_access_key_id = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
     aws_secret_access_key = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
-    aws_ssm_target_kubeconfig = "arn:aws:ssm:eu-west-1:127613428667:parameter/tbnl-tf/${var.environment}/kubeconfig/${var.name}"
+    aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
     name = local.instance_name
     pushover_user_key = var.pushover_user_key
     pushover_api_token = var.pushover_api_token
@@ -40,16 +46,113 @@ locals {
   })
 
   tailscale_tags = ["tag:cloud-server"]
+
+  # Extract attributes of created server, depending on cloud type 
+  cloud_server_attributes = {
+    ipv4_address_public = element(concat(
+      var.cloud == "digital_ocean" ? [module.digital_ocean_server.ipv4_address_public] : [],
+    ), 0)
+  }
 }
 
+# IAM
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
+# Allow SSM
+data "aws_iam_policy_document" "ssm" {
+  count = var.enabled ? 1 : 0
+
+  statement {
+    sid = "AllowStoreKubeconfig"
+
+    actions = [
+      "ssm:PutParameter",
+    ]
+
+    resources = [
+      "${module.ssm_kubeconfig.ssm_parameter_arn}",
+    ]
+  }
+
+  statement {
+    sid = "AllowReadClusterSecrets"
+
+    actions = [
+      "ssm:GetParameterHistory",
+      "ssm:GetParametersByPath",
+      "ssm:GetParameters",
+      "ssm:GetParameter",
+    ]
+
+    resources = [
+      "${local.aws_ssm_path_cluster_secrets_arn}",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "ssm" {
+  count = var.enabled ? 1 : 0
+
+  name   = "ssm-${local.aws_resources_common_name}"
+  path   = "/"
+  policy = data.aws_iam_policy_document.ssm[0].json
+}
+
+resource "aws_iam_user_policy_attachment" "ssm" {
+  count = var.enabled ? 1 : 0
+
+  user       = aws_iam_user.cloud_server_identity[0].name
+  policy_arn = aws_iam_policy.ssm[0].arn
+}
+
+# Restrict to remote IP
+# Note: 
+#   Since it depends on the server ipv4, this policy is attached _after_ server is created.
+#   This is the reason the policy is separate from the ssm policy which is needed _before_ the server is created.
+data "aws_iam_policy_document" "ip_restrict" {
+  count = var.enabled ? 1 : 0
+
+  statement {
+    sid       = "RestrictToServerIp"
+    effect    = "Deny"
+    actions   = ["*"]
+    resources = ["*"]
+
+    condition {
+      test     = "NotIpAddress"
+      variable = "aws:SourceIp"
+      values   = ["${local.cloud_server_attributes.ipv4_address_public}/32"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:ViaAWSService"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "ip_restrict" {
+  count = var.enabled ? 1 : 0
+
+  name   = "ip-restrict-${local.aws_resources_common_name}"
+  path   = "/"
+  policy = data.aws_iam_policy_document.ip_restrict[0].json
+}
+
+resource "aws_iam_user_policy_attachment" "ip_restrict" {
+  count = var.enabled ? 1 : 0
+
+  user       = aws_iam_user.cloud_server_identity[0].name
+  policy_arn = aws_iam_policy.ip_restrict[0].arn
+}
+
 resource "aws_iam_user" "cloud_server_identity" {
   count = var.enabled ? 1 : 0
 
-  name  = format("server-identity-%s", local.instance_name)
+  name  = local.aws_resources_common_name
   path  = "/system/"
 }
 
@@ -58,6 +161,27 @@ resource "aws_iam_access_key" "cloud_server_access_key" {
 
   user   = aws_iam_user.cloud_server_identity[0].name
   status = "Active"
+
+  depends_on = [
+    # We need the policy to be present since server will upload kubeconfig during initialization
+    aws_iam_user_policy_attachment.ssm,
+  ]
+}
+
+# SSM parameter will be written by server during initialization.
+# Nevertheless manage via Terraform to control lifecycle.
+module "ssm_kubeconfig" {
+  source  = "terraform-aws-modules/ssm-parameter/aws"
+  version = "1.1.0"
+
+  create = var.enabled
+
+  name                 = local.aws_ssm_target_kubeconfig_path
+  value                = "placeholder"
+  type                 = "SecureString"
+  secure_type          = true
+  description          = "Kubeconfig for k3s@${local.name}"
+  ignore_value_changes = true
 }
 
 resource "tailscale_tailnet_key" "cloud_server" {

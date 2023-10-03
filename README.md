@@ -39,6 +39,7 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 * Split blue/green, propagate 'cluster name' into app-of-apps, controlling ingress hostnames etc.
 * IAM policy and user for ESO
 * ESO
+* Argo notifications
 * DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * Cert manager for internal ingresses (lets-encrypt, DNS challenge)
 * Cloudflare tunnel

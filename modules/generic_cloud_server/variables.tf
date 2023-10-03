@@ -9,6 +9,12 @@ variable "name" {
   description = "Server name"
 }
 
+variable "project" {
+  type        = string
+  default     = "tbnl-tf"
+  description = "Project name, used in resource naming"
+}
+
 variable "environment" {
   type        = string
   default     = "prod"

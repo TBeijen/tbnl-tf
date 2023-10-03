@@ -26,6 +26,20 @@ write_files:
 
     [Install]
     WantedBy=multi-user.target
+- path: /root/.aws/config
+  owner: root:root
+  permissions: '0644'
+  content: |
+    [default]
+    output = json
+    region = eu-west-1
+- path: /root/.aws/credentials
+  owner: root:root
+  permissions: '0600'
+  content: |
+    [default]
+    aws_access_key_id = ${aws_access_key_id}
+    aws_secret_access_key = ${aws_secret_access_key}
 
 runcmd:
   # Systemd setup
@@ -65,7 +79,10 @@ runcmd:
   - |
     export NEEDRESTART_SUSPEND=suspend
     apt install awscli -y
-
+  - |
+    cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${name}/g" | sed -E "s/127.0.0.1/${name}/g" > ~/${name}
+  - |
+    aws ssm put-parameter --region eu-west-1 --overwrite --name "${aws_ssm_target_kubeconfig}" --value file:///root/${name} --type SecureString
 
   # Install ArgoCD
   # ==============
