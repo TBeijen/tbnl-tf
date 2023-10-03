@@ -80,7 +80,7 @@ runcmd:
     export NEEDRESTART_SUSPEND=suspend
     apt install awscli -y
   - |
-    cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${name}/g" | sed -E "s/127.0.0.1/${name}/g" > ~/${name}
+    cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${name}/g" | sed -E "s/127.0.0.1/${name}/g" > /root/${name}
   - |
     aws ssm put-parameter --region eu-west-1 --overwrite --name "${aws_ssm_target_kubeconfig}" --value file:///root/${name} --type SecureString
 
