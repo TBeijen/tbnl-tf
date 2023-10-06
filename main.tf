@@ -5,14 +5,18 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.17.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.16.0"
+    }
     digitalocean = {
       source  = "digitalocean/digitalocean"
       version = "~> 2.30.0"
     }
     tailscale = {
-      source = "tailscale/tailscale"
+      source  = "tailscale/tailscale"
       version = "~> 0.13.10"
-    }    
+    }
   }
   # Need to come up with hack to configure remote state based on vars or workspace
   backend "s3" {
@@ -25,19 +29,35 @@ terraform {
 }
 
 locals {
-  state_bucket            = "tfstate-${var.project}-${var.environment}"
-  state_dynamodb_table    = "tfstate-${var.project}-${var.environment}"
-  project_secrets = {for name in [
+  state_bucket         = "tfstate-${var.project}-${var.environment}"
+  state_dynamodb_table = "tfstate-${var.project}-${var.environment}"
+  project_secrets = { for name in [
+    "cloudflare",
     "digital_ocean",
     "tailscale_client_id",
     "tailscale_client_secret",
     "pushover_user_key",
     "pushover_api_key_tbnl_infra",
-  ]: name => "/${var.project}/${var.environment}/secret/${name}"}
+  ] : name => "/${var.project}/${var.environment}/secret/${name}" }
 }
 
+# Configure providers
 provider "aws" {
   region = "eu-west-1"
+}
+
+provider "cloudflare" {
+  api_token = data.aws_ssm_parameter.secret["cloudflare"].value
+}
+
+provider "digitalocean" {
+  token = data.aws_ssm_parameter.secret["digital_ocean"].value
+}
+
+provider "tailscale" {
+  oauth_client_id     = data.aws_ssm_parameter.secret["tailscale_client_id"].value
+  oauth_client_secret = data.aws_ssm_parameter.secret["tailscale_client_secret"].value
+  scopes              = ["devices"]
 }
 
 module "terraform_state" {
@@ -47,7 +67,7 @@ module "terraform_state" {
   dynamodb_table = local.state_dynamodb_table
 }
 
-# When adding a new secret: Run once with --target=module.provider_secret
+# When adding a new secret: Run once with --target=module.secret
 module "secret" {
   source  = "terraform-aws-modules/ssm-parameter/aws"
   version = "1.1.0"
@@ -68,17 +88,6 @@ data "aws_ssm_parameter" "secret" {
   name = each.value
 }
 
-# Configure providers
-provider "digitalocean" {
-  token = data.aws_ssm_parameter.secret["digital_ocean"].value
-}
-
-provider "tailscale" {
-  oauth_client_id     = data.aws_ssm_parameter.secret["tailscale_client_id"].value
-  oauth_client_secret = data.aws_ssm_parameter.secret["tailscale_client_secret"].value
-  scopes              = ["devices"]
-}
-
 # Set digital ocean key
 resource "digitalocean_ssh_key" "default" {
   name       = "${var.environment}-tbnl_ed25519"
@@ -87,7 +96,7 @@ resource "digitalocean_ssh_key" "default" {
 
 module "server_poc_1" {
   source = "./modules/generic_cloud_server"
-  
+
   enabled = true
 
   name               = "poc-1"
@@ -100,7 +109,7 @@ module "server_poc_1" {
 
 module "server_poc_2" {
   source = "./modules/generic_cloud_server"
-  
+
   enabled = false
 
   name               = "poc-2"

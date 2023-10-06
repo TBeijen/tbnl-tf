@@ -4,10 +4,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.17.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
     tailscale = {
-      source = "tailscale/tailscale"
+      source  = "tailscale/tailscale"
       version = "~> 0.13.10"
-    }    
+    }
   }
 }
 
@@ -18,31 +22,31 @@ resource "random_pet" "cloud_server" {
   keepers = {}
 }
 
-locals { 
+locals {
   name = "${var.environment}-${var.name}"
 
   # Instance name is used to help identify generations of instances, 
   # e.g. in Tailscale where previous identical machine remains in overview for a period
-  instance_name = format("%s%s", 
+  instance_name = format("%s%s",
     local.name,
     (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
 
   aws_resources_common_name = "${var.project}-${var.environment}-${local.instance_name}"
 
-  aws_ssm_target_kubeconfig_path = "/${var.project}/${var.environment}/kubeconfig/${local.name}"
+  aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.name}"
   aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secrets/*"
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
-    argocd_install_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml"
+    argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml"
     argocd_app_of_apps_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/app-of-apps.yaml"
-    aws_access_key_id = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
-    aws_secret_access_key = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
+    aws_access_key_id         = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
+    aws_secret_access_key     = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
     aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
-    name = local.instance_name
-    pushover_user_key = var.pushover_user_key
-    pushover_api_token = var.pushover_api_token
-    tailscale_auth_key = try(tailscale_tailnet_key.cloud_server[0].key, "")
+    name                      = local.instance_name
+    pushover_user_key         = var.pushover_user_key
+    pushover_api_token        = var.pushover_api_token
+    tailscale_auth_key        = try(tailscale_tailnet_key.cloud_server[0].key, "")
   })
 
   tailscale_tags = ["tag:cloud-server"]
@@ -152,8 +156,8 @@ resource "aws_iam_user_policy_attachment" "ip_restrict" {
 resource "aws_iam_user" "cloud_server_identity" {
   count = var.enabled ? 1 : 0
 
-  name  = local.aws_resources_common_name
-  path  = "/system/"
+  name = local.aws_resources_common_name
+  path = "/system/"
 }
 
 resource "aws_iam_access_key" "cloud_server_access_key" {
@@ -191,16 +195,34 @@ resource "tailscale_tailnet_key" "cloud_server" {
   reusable      = true
   preauthorized = true
   # Using ephemeral to have servers automatically de-register from tailscale when removed
-  ephemeral     = true
-  tags          = local.tailscale_tags
+  ephemeral = true
+  tags      = local.tailscale_tags
+}
+
+data "cloudflare_zone" "internal" {
+  count = var.enabled ? 1 : 0
+
+  name = var.cloudflare_internal_zone_name
+}
+
+resource "cloudflare_record" "internal_wildcard" {
+  count = var.enabled ? 1 : 0
+
+  zone_id = data.cloudflare_zone.internal[0].id
+  name    = format("*.%s.%s", local.name, var.internal_dns_suffix)
+  value   = format("%s.%s", local.instance_name, var.tailnet_name)
+  type    = "CNAME"
+  ttl     = 60
+  proxied = false
+  comment = "Wildcard record for environment=${var.environment}, server=${local.instance_name}"
 }
 
 module "digital_ocean_server" {
   source = "../server_digital_ocean"
-  
+
   enabled = (var.enabled && var.cloud == "digital_ocean")
 
-  name           = local.instance_name
-  ssh_key_name   = var.ssh_key_name
-  user_data      = local.user_data
+  name         = local.instance_name
+  ssh_key_name = var.ssh_key_name
+  user_data    = local.user_data
 }

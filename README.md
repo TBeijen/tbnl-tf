@@ -33,14 +33,34 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 
 ## TODO
 
-* Adapt and write kubeconfig to allow use outside of VM (using tailscale hostname as server)
-* Script to download kubeconfig(s) from ssm
-* GitOps repo, have Argo manage itself
+* ✅ Adapt and write kubeconfig to allow use outside of VM (using tailscale hostname as server)
+* ✅ Script to download kubeconfig(s) from ssm
+* ✅ GitOps repo, have Argo manage itself
 * Split blue/green, propagate 'cluster name' into app-of-apps, controlling ingress hostnames etc.
-* IAM policy and user for ESO
-* ESO
+* ✅ IAM policy and user for ESO
+* ESO + secret 0
 * Argo notifications
 * DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * Cert manager for internal ingresses (lets-encrypt, DNS challenge)
 * Cloudflare tunnel
 * LeafCloud server instead of DO
+
+## V2
+
+* Build image and upload to DO/LeafCloud
+* Release flow: 
+
+    * https://akuity.io/blog/introducing-kargo/ 
+    * https://lifecycle.keptn.sh/?
+
+* Analytics
+
+    * https://blog.ossph.org/best-open-source-alternatives-to-google-analytics/
+    * https://countly.com/product (postgres/mysql)
+    * https://umami.is/docs/install (mongodb)
+    * https://docs.ackee.electerious.com/#/docs/Get%20started#with-helm (mongodb)
+
+* Mongodb free tiers
+
+    * https://www.mongodb.com/pricing
+    * https://azure.microsoft.com/en-us/blog/microsoft-azure-tutorial-how-to-integrate-azure-functions-with-mongodb/

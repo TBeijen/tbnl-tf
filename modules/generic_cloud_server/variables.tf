@@ -30,7 +30,25 @@ variable "add_random_pet_suffix" {
 variable "ssh_key_name" {
   type        = string
   default     = ""
-  description = "Ssh key to load and configure into server"
+  description = "Ssh key to load and configure into server (cloud=digital_ocean)"
+}
+
+variable "cloudflare_internal_zone_name" {
+  type        = string
+  default     = "tbnl.nl"
+  description = "Zone to use for DNS records that are only accessible over tailnet"
+}
+
+variable "internal_dns_suffix" {
+  type        = string
+  default     = "internal.tbnl.nl"
+  description = "All internal records will be under this domain. Needs to be within internal zone"
+}
+
+variable "tailnet_name" {
+  type        = string
+  default     = "greyhound-ionian.ts.net"
+  description = "DNS associated with the tailne"
 }
 
 variable "pushover_user_key" {
@@ -45,12 +63,11 @@ variable "pushover_api_token" {
   description = "API token to send PushOver notifications"
 }
 
-
 variable "cloud" {
   type        = string
   description = "String indicating cloud type"
   validation {
-      condition     = contains(["digital_ocean"], var.cloud)
-      error_message = "Cloud must be any of the supported clouds: [digital_ocean]"
+    condition     = contains(["digital_ocean"], var.cloud)
+    error_message = "Cloud must be any of the supported clouds: [digital_ocean]"
   }
 }
