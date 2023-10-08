@@ -40,7 +40,8 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 * ✅ IAM policy and user for ESO
 * ESO + secret 0
 * Argo notifications
-* DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
+* Traefik stdout logging
+* ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * Cert manager for internal ingresses (lets-encrypt, DNS challenge)
 * Cloudflare tunnel
 * LeafCloud server instead of DO

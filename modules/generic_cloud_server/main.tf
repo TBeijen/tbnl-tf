@@ -23,18 +23,20 @@ resource "random_pet" "cloud_server" {
 }
 
 locals {
-  name = "${var.environment}-${var.name}"
+  # Cluster name combines environment and base name, but does not have random pet suffix
+  # Used to identify K3S and ArgoCD clusters
+  cluster_name = "${var.environment}-${var.name}"
 
   # Instance name is used to help identify generations of instances, 
   # e.g. in Tailscale where previous identical machine remains in overview for a period
   instance_name = format("%s%s",
-    local.name,
+    local.cluster_name,
     (var.enabled && var.add_random_pet_suffix) ? "-${random_pet.cloud_server[0].id}" : ""
   )
 
   aws_resources_common_name = "${var.project}-${var.environment}-${local.instance_name}"
 
-  aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.name}"
+  aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.cluster_name}"
   aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secrets/*"
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
@@ -43,7 +45,8 @@ locals {
     aws_access_key_id         = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
     aws_secret_access_key     = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
     aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
-    name                      = local.instance_name
+    cluster_name              = local.cluster_name
+    instance_name             = local.instance_name
     pushover_user_key         = var.pushover_user_key
     pushover_api_token        = var.pushover_api_token
     tailscale_auth_key        = try(tailscale_tailnet_key.cloud_server[0].key, "")
@@ -184,7 +187,7 @@ module "ssm_kubeconfig" {
   value                = "placeholder"
   type                 = "SecureString"
   secure_type          = true
-  description          = "Kubeconfig for k3s@${local.name}"
+  description          = "Kubeconfig for k3s@${local.cluster_name}"
   ignore_value_changes = true
 }
 
@@ -209,7 +212,7 @@ resource "cloudflare_record" "internal_wildcard" {
   count = var.enabled ? 1 : 0
 
   zone_id = data.cloudflare_zone.internal[0].id
-  name    = format("*.%s.%s", local.name, var.internal_dns_suffix)
+  name    = format("*.%s.%s", local.cluster_name, var.internal_dns_suffix)
   value   = format("%s.%s", local.instance_name, var.tailnet_name)
   type    = "CNAME"
   ttl     = 60

@@ -64,14 +64,14 @@ runcmd:
   # Optional: Include this line to configure this machine as an exit node
   # - ['tailscale', 'set', '--advertise-exit-node']
 
-  - ['/usr/bin/po_notify.sh', 'Tailscale installed', 'Installed Tailscale on server ${name}']
+  - ['/usr/bin/po_notify.sh', 'Tailscale installed', 'Installed Tailscale on server ${instance_name}']
 
   # K3S setup
   # =========
   #
   - ['sh', '-c', 'curl -sfL https://get.k3s.io | sh -']
 
-  - ['/usr/bin/po_notify.sh', 'K3S installed', 'Installed K3S on server ${name}']
+  - ['/usr/bin/po_notify.sh', 'K3S installed', 'Installed K3S on server ${instance_name}']
 
   # AWS CLI & store kubeconfig
   # ==========================
@@ -80,18 +80,21 @@ runcmd:
     export NEEDRESTART_SUSPEND=suspend
     apt install awscli -y
   - |
-    cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${name}/g" | sed -E "s/127.0.0.1/${name}/g" > /root/${name}
+    cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${instance_name}/g" | sed -E "s/127.0.0.1/${instance_name}/g" > /root/${instance_name}
   - |
-    aws ssm put-parameter --region eu-west-1 --overwrite --name "${aws_ssm_target_kubeconfig}" --value file:///root/${name} --type SecureString
+    aws ssm put-parameter --region eu-west-1 --overwrite --name "${aws_ssm_target_kubeconfig}" --value file:///root/${instance_name} --type SecureString
 
   # Install ArgoCD
   # ==============
   #
   - ['kubectl', 'create', 'namespace', 'argocd']
   - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_install_source}']
-  - ['kubectl', 'apply', '-n', 'argocd', '-f', '${argocd_app_of_apps_source}']
 
-  - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${name}']
+  # bootstrap with app-of-apps, setting the cluster name
+  - |
+    curl -s "${argocd_app_of_apps_source}" | sed 's/__CLUSTER_NAME__/${cluster_name}/g' | kubectl apply -n argocd -f -
+
+  - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${instance_name}']
 
   # Updates & disable auto-update
   # =============================
@@ -102,14 +105,14 @@ runcmd:
     export NEEDRESTART_SUSPEND=suspend
     apt -s dist-upgrade | grep "^Inst" | grep -i securi | awk -F " " {'print $2'} | xargs apt install -y
   
-  - ['/usr/bin/po_notify.sh', 'Security updates installed', 'Installed security updates on server ${name}.']
+  - ['/usr/bin/po_notify.sh', 'Security updates installed', 'Installed security updates on server ${instance_name}.']
 
   # (Needrestart seems to always prevent interactive prompt when kernel update requires reboot, so triggering reboot ourselves.)
   - |
     if [ -f /var/run/reboot-required ]; then
-      /usr/bin/po_notify.sh "Rebooting" "Rebooting server ${name}"
+      /usr/bin/po_notify.sh "Rebooting" "Rebooting server ${instance_name}"
       reboot now
     else
-      /usr/bin/po_notify.sh "Restarting services" "Executing needrestart on server ${name}"
+      /usr/bin/po_notify.sh "Restarting services" "Executing needrestart on server ${instance_name}"
       needrestart -r a
     fi
