@@ -97,7 +97,7 @@ resource "digitalocean_ssh_key" "default" {
 module "server_poc_1" {
   source = "./modules/generic_cloud_server"
 
-  enabled = true
+  enabled = false
 
   name               = "poc-1"
   environment        = var.environment

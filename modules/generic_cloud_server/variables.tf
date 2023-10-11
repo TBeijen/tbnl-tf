@@ -15,6 +15,12 @@ variable "project" {
   description = "Project name, used in resource naming"
 }
 
+variable "target_revision" {
+  type        = string
+  default     = "main"
+  description = "The gitops revision to track"
+}
+
 variable "environment" {
   type        = string
   default     = "prod"

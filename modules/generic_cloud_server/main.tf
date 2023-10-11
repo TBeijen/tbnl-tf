@@ -40,13 +40,14 @@ locals {
   aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secrets/*"
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
-    argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/install.yaml"
-    argocd_app_of_apps_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/main/argocd/app-of-apps.yaml"
+    argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/${var.target_revision}/applications/argocd/install.yaml"
+    argocd_app_of_apps_source = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/${var.target_revision}/init/app-of-apps.application.yaml"
     aws_access_key_id         = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
     aws_secret_access_key     = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
     aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
     cluster_name              = local.cluster_name
     instance_name             = local.instance_name
+    target_revision           = var.target_revision
     pushover_user_key         = var.pushover_user_key
     pushover_api_token        = var.pushover_api_token
     tailscale_auth_key        = try(tailscale_tailnet_key.cloud_server[0].key, "")
