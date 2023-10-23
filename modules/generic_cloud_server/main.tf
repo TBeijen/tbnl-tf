@@ -37,7 +37,7 @@ locals {
   aws_resources_common_name = "${var.project}-${var.environment}-${local.instance_name}"
 
   aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.cluster_name}"
-  aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secrets/*"
+  aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secret/*"
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
     argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/${var.target_revision}/applications/argocd/install.yaml"

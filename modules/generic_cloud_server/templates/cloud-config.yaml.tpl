@@ -96,6 +96,13 @@ runcmd:
 
   - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${instance_name}']
 
+  # Provide ESO secret
+  # ==================
+  - |
+    sed '/\[default\]/d; s/ //g' /root/.aws/credentials > /root/.aws/credentials.eso
+    kubectl create namespace external-secrets
+    kubectl -n external-secrets create secret generic aws-secret --from-env-file=/root/.aws/credentials.eso && /usr/bin/po_notify.sh 'Set up ESO secret' 'Set up ESO secret on server ${instance_name}'
+
   # Updates & disable auto-update
   # =============================
   #
