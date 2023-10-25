@@ -97,7 +97,7 @@ resource "digitalocean_ssh_key" "default" {
 module "server_poc_1" {
   source = "./modules/generic_cloud_server"
 
-  enabled = false
+  enabled = true
 
   name               = "poc-1"
   environment        = var.environment
@@ -118,4 +118,21 @@ module "server_poc_2" {
   ssh_key_name       = digitalocean_ssh_key.default.name
   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
+}
+
+# @TODO 
+# - Properly switch based on active server
+# - Set variables cloudflare zones at this level and pass to generic_cloud_server module
+data "cloudflare_zone" "internal" {
+  name = "tbnl.nl"
+}
+
+resource "cloudflare_record" "podinfo" {
+  zone_id = data.cloudflare_zone.internal.id
+  name    = "podinfo.tbnl.nl"
+  value   = module.server_poc_1.cloudflare_tunnel_cname
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+  comment = "Exposing podinfo using tunnel (temp. using 'internal' zone)"
 }

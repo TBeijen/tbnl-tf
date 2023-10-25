@@ -39,6 +39,12 @@ variable "ssh_key_name" {
   description = "Ssh key to load and configure into server (cloud=digital_ocean)"
 }
 
+variable "cloudflare_account_name" {
+  type        = string
+  default     = "tibobeijen_main"
+  description = "Cloudflare account name that holds DNS zones and tunnel configs"
+}
+
 variable "cloudflare_internal_zone_name" {
   type        = string
   default     = "tbnl.nl"

@@ -16,6 +16,8 @@ Populate SSM parameter secrets via AWS console:
 ## Resources:
 
 * https://tailscale.com/kb/1293/cloud-init/
+* https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/deploy-tunnels/tunnel-permissions/
+* Tunnel supports ingress paths: https://github.com/cloudflare/cloudflared/issues/286#issuecomment-753038216
 * Argo:
 
     * https://argo-cd.readthedocs.io/en/release-2.8/operator-manual/installation/
@@ -52,6 +54,8 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
     * https://traefik.io/blog/https-on-kubernetes-using-traefik-proxy/
 
 * Cloudflare tunnel
+* ✅ DNS blue/green toggling
+* Application pipelines (blog, anno2003)
 * LeafCloud server instead of DO
 
 ## V2

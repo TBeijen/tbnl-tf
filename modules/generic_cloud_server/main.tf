@@ -37,7 +37,9 @@ locals {
   aws_resources_common_name = "${var.project}-${var.environment}-${local.instance_name}"
 
   aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.cluster_name}"
+  aws_ssm_tunnel_secret_path       = "/${var.project}/${var.environment}/cluster-secret/cloudflare-tunnel/${local.cluster_name}"
   aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secret/*"
+
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
     argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/${var.target_revision}/applications/argocd/install.yaml"
@@ -63,7 +65,10 @@ locals {
   }
 }
 
-# IAM
+
+# AWS
+# ======================================
+#
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -192,6 +197,10 @@ module "ssm_kubeconfig" {
   ignore_value_changes = true
 }
 
+
+# Tailscale
+# ======================================
+#
 resource "tailscale_tailnet_key" "cloud_server" {
   count = var.enabled ? 1 : 0
 
@@ -203,6 +212,13 @@ resource "tailscale_tailnet_key" "cloud_server" {
   tags      = local.tailscale_tags
 }
 
+
+# Cloudflare
+# ======================================
+#
+
+# Wildcard internal DNS
+# ---------------------
 data "cloudflare_zone" "internal" {
   count = var.enabled ? 1 : 0
 
@@ -221,6 +237,50 @@ resource "cloudflare_record" "internal_wildcard" {
   comment = "Wildcard record for environment=${var.environment}, server=${local.instance_name}"
 }
 
+# Tunnel
+# ------
+resource "random_id" "tunnel_secret" {
+  count = var.enabled ? 1 : 0
+
+  byte_length = 35
+}
+
+data "cloudflare_accounts" "main" {
+  name = var.cloudflare_account_name
+}
+
+resource "cloudflare_tunnel" "tunnel" {
+  count = var.enabled ? 1 : 0
+
+  # account_id = var.cloudflare_account_id
+  account_id = data.cloudflare_accounts.main.accounts[0].id
+  name       = "tbnl-${local.cluster_name}"
+  secret     = random_id.tunnel_secret[0].b64_std
+}
+
+# Store tunnel secret in ssm
+module "ssm_tunnel_secret" {
+  source  = "terraform-aws-modules/ssm-parameter/aws"
+  version = "1.1.0"
+
+  create = var.enabled
+
+  name                 = local.aws_ssm_tunnel_secret_path
+  type                 = "SecureString"
+  secure_type          = true
+  description          = "Tunnel secret for cluster ${local.cluster_name}"
+  ignore_value_changes = true
+
+  value = jsonencode({
+    AccountTag   = data.cloudflare_accounts.main.accounts[0].id
+    TunnelID     = try(cloudflare_tunnel.tunnel[0].id, "")
+    TunnelSecret = try(random_id.tunnel_secret[0].b64_std, "")
+  })
+}
+
+# K3S server
+# ======================================
+#
 module "digital_ocean_server" {
   source = "../server_digital_ocean"
 
