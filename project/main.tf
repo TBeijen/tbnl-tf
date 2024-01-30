@@ -49,8 +49,9 @@ data "aws_ssm_parameter" "secret" {
 }
 
 locals {
-  do_ssh_key_name = "prod-tbnl_ed25519"
+  do_ssh_key_name = "tbnl_ed25519"
 }
+
 # Set digital ocean key
 resource "digitalocean_ssh_key" "default" {
   count = var.do_provision_ssh_key == true ? 1 : 0

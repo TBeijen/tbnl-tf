@@ -20,17 +20,17 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "296093601437-tfstate"
-    key            = "tbnl-tf/dev/terraform.tfstate" # <project-name>/<env>/terraform.tfstate
+    bucket         = "248624703507-tfstate"
+    key            = "tbnl-tf/prod/terraform.tfstate" # <project-name>/<env>/terraform.tfstate
     region         = "eu-west-1"
-    dynamodb_table = "tfstate-tbnl-tf-dev" # tfstate-<project-name>-<env>
+    dynamodb_table = "tfstate-tbnl-tf-prod" # tfstate-<project-name>-<env>
     encrypt        = true
   }
 }
 
 locals {
   project     = "tbnl-tf"
-  environment = "dev"
+  environment = "prod"
 }
 
 module "tbnl" {
@@ -38,7 +38,8 @@ module "tbnl" {
 
   project              = local.project
   environment          = local.environment
-  state_bucket         = "296093601437-tfstate"
-  state_dynamodb_table = "tfstate-tbnl-tf-dev"
+  state_bucket         = "248624703507-tfstate"
+  state_dynamodb_table = "tfstate-tbnl-tf-prod"
   project_secrets      = local.project_secrets
+  do_provision_ssh_key = true
 }
