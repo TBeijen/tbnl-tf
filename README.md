@@ -5,9 +5,24 @@
 Start with local Terraform state, provision remote storage:
 
 ```sh
+# Choose (or create) environment
+cd environments/dev
+
 # Be sure to comment out the backend block in terraform code
 terraform init
-terraform apply --target=module.remote_state
+
+# Create state bucket (might need two attempts because of 409 on PutBucketVersioning)
+terraform apply --target=module.tbnl.module.terraform_state
+
+# Activate state configuration by uncommenting
+# Answer 'yes' on question to copy state
+terraform init
+
+# Bootstrap ssm secrets
+terraform apply --target=module.tbnl.module.secret
+
+# Populate secrets in AWS console or using AWS CLI
+
 ```
 
 Populate SSM parameter secrets via AWS console:
