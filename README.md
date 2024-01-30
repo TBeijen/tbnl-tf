@@ -33,6 +33,12 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/TBeijen/tbnl-gitops
 aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recursive --output json
 ```
 
+Cloudflare tunnel
+```sh
+cloudflared tunnel create prod-poc-1
+cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
+```
+
 ## TODO
 
 * ✅ Adapt and write kubeconfig to allow use outside of VM (using tailscale hostname as server)
@@ -53,8 +59,8 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
     * https://doc.traefik.io/traefik/https/tls/#tls-options
     * https://traefik.io/blog/https-on-kubernetes-using-traefik-proxy/
 
-* Cloudflare tunnel
-* ✅ DNS blue/green toggling
+* ✅ Cloudflare tunnel
+* DNS blue/green toggling
 * Application pipelines (blog, anno2003)
 * LeafCloud server instead of DO
 
@@ -77,6 +83,7 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 
     * https://akuity.io/blog/introducing-kargo/ 
     * https://lifecycle.keptn.sh/?
+    * Promoting releases (KCD2023): https://github.com/rcarrata/kcd23ams-gitops-patterns/blob/main/demos/pattern6/README.md
 
 * Analytics
 
