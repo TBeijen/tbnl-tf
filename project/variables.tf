@@ -25,6 +25,18 @@ variable "project_secrets" {
   description = "SSM secrets to provision and load"
 }
 
+variable "cloud_servers" {
+  type = map(object({
+    enabled = bool
+    cloud   = string
+  }))
+  validation {
+    condition     = toset(keys(var.cloud_servers)) == toset(["blue", "green"])
+    error_message = "Var cloud_servers must define a 'blue' and 'green' object"
+  }
+
+}
+
 variable "do_provision_ssh_key" {
   type        = bool
   default     = false

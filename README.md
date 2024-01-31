@@ -22,7 +22,9 @@ terraform init
 terraform apply --target=module.tbnl.module.secret
 
 # Populate secrets in AWS console or using AWS CLI
-
+#
+# Now providers can be configured using secret
+terraform apply
 ```
 
 Populate SSM parameter secrets via AWS console:

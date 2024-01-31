@@ -60,6 +60,23 @@ resource "digitalocean_ssh_key" "default" {
   public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
 }
 
+module "server" {
+  for_each = var.cloud_servers
+
+  source = "../modules/generic_cloud_server"
+
+  enabled = each.value.enabled
+
+  name               = each.key
+  environment        = var.environment
+  cloud              = each.value.cloud
+  ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
+  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
+  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
+}
+
+
+
 module "server_poc_1" {
   source = "../modules/generic_cloud_server"
 
