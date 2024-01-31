@@ -110,6 +110,7 @@ runcmd:
   - ['systemctl', 'disable', 'unattended-upgrades.service']
   - |
     export NEEDRESTART_SUSPEND=suspend
+    export DEBIAN_FRONTEND=noninteractive
     apt -s dist-upgrade | grep "^Inst" | grep -i securi | awk -F " " {'print $2'} | xargs apt install -y
   
   - ['/usr/bin/po_notify.sh', 'Security updates installed', 'Installed security updates on server ${instance_name}.']
