@@ -38,8 +38,8 @@ locals {
 
   aws_ssm_target_kubeconfig_path   = "/${var.project}/${var.environment}/kubeconfig/${local.cluster_name}"
   aws_ssm_tunnel_secret_path       = "/${var.project}/${var.environment}/cluster-secret/cloudflare-tunnel/${local.cluster_name}"
-  aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:eu-west-1:127613428667:parameter/${var.project}/${var.environment}/cluster-secret/*"
-
+  aws_ssm_example_secret_path      = "/${var.project}/${var.environment}/cluster-secret/example/${local.cluster_name}"
+  aws_ssm_path_cluster_secrets_arn = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/${var.environment}/cluster-secret/*"
 
   user_data = templatefile("${path.module}/templates/cloud-config.yaml.tpl", {
     argocd_install_source     = "https://raw.githubusercontent.com/TBeijen/tbnl-gitops/${var.target_revision}/applications/argocd/install.yaml"
@@ -47,6 +47,7 @@ locals {
     aws_access_key_id         = try(aws_iam_access_key.cloud_server_access_key[0].id, "")
     aws_secret_access_key     = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
     aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
+    environment               = var.environment
     cluster_name              = local.cluster_name
     instance_name             = local.instance_name
     target_revision           = var.target_revision
@@ -195,6 +196,27 @@ module "ssm_kubeconfig" {
   secure_type          = true
   description          = "Kubeconfig for k3s@${local.cluster_name}"
   ignore_value_changes = true
+}
+
+
+# ESO
+# ======================================
+#
+
+# Example secret to be picked up by ESO
+module "ssm_example_secret" {
+  source  = "terraform-aws-modules/ssm-parameter/aws"
+  version = "1.1.0"
+
+  create = var.enabled
+
+  name                 = local.aws_ssm_example_secret_path
+  type                 = "SecureString"
+  secure_type          = true
+  description          = "Example secret for cluster ${local.cluster_name}"
+  ignore_value_changes = true
+
+  value = "s3cr3t-${local.instance_name}"
 }
 
 

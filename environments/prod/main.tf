@@ -41,5 +41,17 @@ module "tbnl" {
   state_bucket         = "248624703507-tfstate"
   state_dynamodb_table = "tfstate-tbnl-tf-prod"
   project_secrets      = local.project_secrets
+
   do_provision_ssh_key = true
+
+  cloud_servers = {
+    blue = {
+      enabled = false
+      cloud   = "digital_ocean"
+    }
+    green = {
+      enabled = true
+      cloud   = "digital_ocean"
+    }
+  }
 }

@@ -92,7 +92,11 @@ runcmd:
 
   # bootstrap with app-of-apps, setting the cluster name
   - |
-    curl -s "${argocd_app_of_apps_source}" | sed 's/__CLUSTER_NAME__/${cluster_name}/g' | sed 's/__TARGET_REVISION__/${target_revision}/g' | kubectl apply -n argocd -f -
+    curl -s "${argocd_app_of_apps_source}" \
+        | sed 's/__ENVIRONMENT__/${environment}/g' \
+        | sed 's/__CLUSTER_NAME__/${cluster_name}/g' \
+        | sed 's/__TARGET_REVISION__/${target_revision}/g' \
+        | kubectl apply -n argocd -f -
 
   - ['/usr/bin/po_notify.sh', 'ArgoCD installed', 'Installed ArgoCD on server ${instance_name}']
 

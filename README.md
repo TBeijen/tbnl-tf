@@ -66,6 +66,7 @@ cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
 * ✅ Use helm for app-of-apps: Better propagating of values
 * ✅ When using helm, make branch to track a variable. Use in cloud-init and propagate through apps
 * ✅ ESO + secret 0
+* Provision example secret as part of cloudserver
 * Argo notifications
 * Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
 * ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
@@ -95,6 +96,8 @@ cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
     * https://medium.com/btech-engineering/introduction-to-neuvector-4defb6168eae
     * https://ranchermanager.docs.rancher.com/v2.6/integrations-in-rancher/neuvector
     * https://www.suse.com/neuvector/
+
+* Kubescape
 
 * Release flow: 
 

@@ -44,40 +44,12 @@ module "tbnl" {
 
   cloud_servers = {
     blue = {
-      enabled = true
+      enabled = false
       cloud   = "digital_ocean"
     }
     green = {
-      enabled = false
+      enabled = true
       cloud   = "digital_ocean"
     }
   }
 }
-
-
-
-# module "server_poc_1" {
-#   source = "../modules/generic_cloud_server"
-
-#   enabled = false
-
-#   name               = "poc-1"
-#   environment        = var.environment
-#   cloud              = "digital_ocean"
-#   ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
-#   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
-#   pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
-# }
-
-# module "server_poc_2" {
-#   source = "../modules/generic_cloud_server"
-
-#   enabled = false
-
-#   name               = "poc-2"
-#   environment        = var.environment
-#   cloud              = "digital_ocean"
-#   ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
-#   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
-#   pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
-# }
