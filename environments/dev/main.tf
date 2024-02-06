@@ -52,4 +52,5 @@ module "tbnl" {
       cloud   = "digital_ocean"
     }
   }
+  active_server = "green"
 }

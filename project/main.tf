@@ -50,6 +50,29 @@ data "aws_ssm_parameter" "secret" {
 
 locals {
   do_ssh_key_name = "tbnl_ed25519"
+
+  servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
+}
+
+# Validate enabled/active flags.
+resource "terraform_data" "validate_servers" {
+  lifecycle {
+    # The AMI ID must refer to an existing AMI that has the tag "nomad-server".
+    precondition {
+      condition = !(
+        length(local.servers_enabled_keys) < 1 &&
+        var.environment == "prod"
+      )
+      error_message = "On environment=prod, at least one server should be enabled"
+    }
+    precondition {
+      condition = (
+        length(local.servers_enabled_keys) == 0 ||
+        contains(local.servers_enabled_keys, var.active_server)
+      )
+      error_message = "Only a server that is enabled can be active"
+    }
+  }
 }
 
 # Set digital ocean key
@@ -70,34 +93,6 @@ module "server" {
   name               = each.key
   environment        = var.environment
   cloud              = each.value.cloud
-  ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
-  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
-  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
-}
-
-
-
-module "server_poc_1" {
-  source = "../modules/generic_cloud_server"
-
-  enabled = false
-
-  name               = "poc-1"
-  environment        = var.environment
-  cloud              = "digital_ocean"
-  ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
-  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
-  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
-}
-
-module "server_poc_2" {
-  source = "../modules/generic_cloud_server"
-
-  enabled = false
-
-  name               = "poc-2"
-  environment        = var.environment
-  cloud              = "digital_ocean"
   ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
