@@ -53,6 +53,7 @@ locals {
     target_revision           = var.target_revision
     pushover_user_key         = var.pushover_user_key
     pushover_api_token        = var.pushover_api_token
+    external_domain           = var.external_domain
     tailscale_auth_key        = try(tailscale_tailnet_key.cloud_server[0].key, "")
   })
 

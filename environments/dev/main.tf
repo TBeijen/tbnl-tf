@@ -41,6 +41,7 @@ module "tbnl" {
   state_bucket         = "296093601437-tfstate"
   state_dynamodb_table = "tfstate-tbnl-tf-dev"
   project_secrets      = local.project_secrets
+  external_domain      = "tibobeijen.net"
 
   cloud_servers = {
     blue = {
@@ -48,7 +49,7 @@ module "tbnl" {
       cloud   = "digital_ocean"
     }
     green = {
-      enabled = true
+      enabled = false
       cloud   = "digital_ocean"
     }
   }

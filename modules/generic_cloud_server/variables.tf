@@ -75,6 +75,11 @@ variable "pushover_api_token" {
   description = "API token to send PushOver notifications"
 }
 
+variable "external_domain" {
+  type        = string
+  description = "External domain name to pass to app-of-apps"
+}
+
 variable "cloud" {
   type        = string
   description = "String indicating cloud type"

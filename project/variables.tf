@@ -35,28 +35,16 @@ variable "cloud_servers" {
     error_message = "Var cloud_servers must define a 'blue' and 'green' object"
   }
 }
-#   validation {
-#     condition = (
-#       anytrue(values(var.cloud_servers)[*].enabled) &&
-#       var.cloud_servers[var.active_server].enabled == true
-#     )
-
-#     error_message = "Can't activate a server that is not enabled"
-#   }
 
 variable "active_server" {
   type        = string
   description = "The cloud server that is active, meaning DNS points to that server."
 }
-#   validation {
-#     condition = (
-#       anytrue(values(var.cloud_servers)[*].enabled) &&
-#       var.cloud_servers[var.active_server].enabled == true
-#     )
-#     error_message = "Can't activate a server that is not enabled"
-#   }
 
-# }
+variable "external_domain" {
+  type        = string
+  description = "External domain to create external records under."
+}
 
 variable "do_provision_ssh_key" {
   type        = bool

@@ -52,6 +52,7 @@ locals {
   do_ssh_key_name = "tbnl_ed25519"
 
   servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
+  target_tunnel_cname  = module.server[var.active_server].cloudflare_tunnel_cname
 }
 
 # Validate enabled/active flags.
@@ -96,21 +97,32 @@ module "server" {
   ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
   pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
+  external_domain    = var.external_domain
 }
 
 # @TODO 
 # - Properly switch based on active server
 # - Set variables cloudflare zones at this level and pass to generic_cloud_server module
-data "cloudflare_zone" "internal" {
-  name = "tbnl.nl"
+data "cloudflare_zone" "external" {
+  name = var.external_domain
 }
 
-# resource "cloudflare_record" "podinfo" {
-#   zone_id = data.cloudflare_zone.internal.id
-#   name    = "podinfo.tbnl.nl"
-#   value   = module.server_poc_1.cloudflare_tunnel_cname
-#   type    = "CNAME"
-#   ttl     = 1
-#   proxied = true
-#   comment = "Exposing podinfo using tunnel (temp. using 'internal' zone)"
-# }
+locals {
+  subdomains = [
+    "podinfo",
+    # "www",
+    # "www-test"
+  ]
+}
+
+resource "cloudflare_record" "public" {
+  for_each = (length(local.servers_enabled_keys) > 0) ? toset(local.subdomains) : toset([])
+
+  zone_id = data.cloudflare_zone.external.id
+  name    = "${each.value}.${var.external_domain}"
+  value   = local.target_tunnel_cname
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+  comment = "Exposing ${each.value} using tunnel"
+}
