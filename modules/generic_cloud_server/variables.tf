@@ -41,7 +41,6 @@ variable "ssh_key_name" {
 
 variable "cloudflare_account_name" {
   type        = string
-  default     = "tibobeijen_main"
   description = "Cloudflare account name that holds DNS zones and tunnel configs"
 }
 

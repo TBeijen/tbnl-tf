@@ -51,14 +51,30 @@ data "aws_ssm_parameter" "secret" {
 locals {
   do_ssh_key_name = "tbnl_ed25519"
 
+  # Subdomains (of var.extenal_domain) to set up DNS and Access for
+  subdomains = [
+    {
+      name       = "www2",
+      restricted = var.environment == "prod" ? false : true
+    },
+    {
+      name       = "www-test",
+      restricted = true
+    },
+    {
+      name       = "podinfo",
+      restricted = true
+    },
+  ]
+
   servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
+  setup_dns_apps       = (length(local.servers_enabled_keys) > 0)
   target_tunnel_cname  = module.server[var.active_server].cloudflare_tunnel_cname
 }
 
 # Validate enabled/active flags.
 resource "terraform_data" "validate_servers" {
   lifecycle {
-    # The AMI ID must refer to an existing AMI that has the tag "nomad-server".
     precondition {
       condition = !(
         length(local.servers_enabled_keys) < 1 &&
@@ -76,6 +92,10 @@ resource "terraform_data" "validate_servers" {
   }
 }
 
+# Cloud server(s)
+# ===============
+#
+
 # Set digital ocean key
 resource "digitalocean_ssh_key" "default" {
   count = var.do_provision_ssh_key == true ? 1 : 0
@@ -91,38 +111,33 @@ module "server" {
 
   enabled = each.value.enabled
 
-  name               = each.key
-  environment        = var.environment
-  cloud              = each.value.cloud
-  ssh_key_name       = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
-  pushover_user_key  = data.aws_ssm_parameter.secret["pushover_user_key"].value
-  pushover_api_token = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
-  external_domain    = var.external_domain
+  name                    = each.key
+  environment             = var.environment
+  cloud                   = each.value.cloud
+  ssh_key_name            = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
+  pushover_user_key       = data.aws_ssm_parameter.secret["pushover_user_key"].value
+  pushover_api_token      = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
+  external_domain         = var.external_domain
+  cloudflare_account_name = var.cloudflare_account_name
 }
 
-# @TODO 
-# - Properly switch based on active server
-# - Set variables cloudflare zones at this level and pass to generic_cloud_server module
-data "cloudflare_zone" "external" {
-  name = var.external_domain
+# Cloudflare DNS and Access
+# =========================
+#
+data "cloudflare_accounts" "main" {
+  name = var.cloudflare_account_name
 }
 
-locals {
-  subdomains = [
-    "podinfo",
-    # "www",
-    # "www-test"
-  ]
-}
+module "cloudflare_app" {
+  for_each = {
+    for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain
+  }
 
-resource "cloudflare_record" "public" {
-  for_each = (length(local.servers_enabled_keys) > 0) ? toset(local.subdomains) : toset([])
+  source = "../modules/cf_tunneled_app"
 
-  zone_id = data.cloudflare_zone.external.id
-  name    = "${each.value}.${var.external_domain}"
-  value   = local.target_tunnel_cname
-  type    = "CNAME"
-  ttl     = 1
-  proxied = true
-  comment = "Exposing ${each.value} using tunnel"
+  cf_account_id = data.cloudflare_accounts.main.accounts[0].id
+  cf_zone_name  = var.external_domain
+  tunnel_cname  = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
+  subdomain     = each.value.name
+  restricted    = try(each.value.restricted, false)
 }

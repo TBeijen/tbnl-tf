@@ -51,3 +51,9 @@ variable "do_provision_ssh_key" {
   default     = false
   description = "If true, key will be provisioned. Only one identical key can exist."
 }
+
+variable "cloudflare_account_name" {
+  type        = string
+  default     = "tibobeijen_main"
+  description = "Cloudflare account name that holds DNS zones and tunnel configs"
+}
