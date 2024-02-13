@@ -9,14 +9,23 @@
 # - Not in correct SSO profile? Immediate fail on lack of state access
 #
 locals {
-  project_secrets = { for name in [
-    "cloudflare",
-    "digital_ocean",
-    "tailscale_client_id",
-    "tailscale_client_secret",
-    "pushover_user_key",
-    "pushover_api_key_tbnl_infra",
-  ] : name => "/${local.project}/${local.environment}/secret/${name}" }
+  project_secrets = merge(
+    { for name in [
+      "cloudflare",
+      "cloudflare_access_email_adresses",
+      "digital_ocean",
+      "tailscale_client_id",
+      "tailscale_client_secret",
+      "pushover_user_key",
+      "pushover_api_key_tbnl_infra",
+      ] : name => "/${local.project}/${local.environment}/secret/${name}"
+    },
+
+    { for name in [
+      "grafana-cloud"
+      ] : name => "/${local.project}/${local.environment}/cluster-secret/${name}"
+    }
+  )
 }
 
 # Load secrets

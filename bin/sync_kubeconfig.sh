@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-kube_config_path="${CONFIG_PATH:-$HOME/workspaces/p/tbnl/.kube/}"
+kube_config_path="${CONFIG_PATH:-$HOME/workspaces/tbnl/.kube/}"
 kube_ssm_path="${SSM_PATH:-/tbnl-tf/prod/kubeconfig/}"
 
 mkdir -p ${kube_config_path}

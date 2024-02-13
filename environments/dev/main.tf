@@ -45,7 +45,7 @@ module "tbnl" {
 
   cloud_servers = {
     blue = {
-      enabled = false
+      enabled = true
       cloud   = "digital_ocean"
     }
     green = {
@@ -53,5 +53,5 @@ module "tbnl" {
       cloud   = "digital_ocean"
     }
   }
-  active_server = "green"
+  active_server = "blue"
 }

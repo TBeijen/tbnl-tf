@@ -12,11 +12,7 @@ data "cloudflare_zone" "default" {
 }
 
 locals {
-  # Specifying here to allow re-use in policy. 
-  # Name used there needs to match actual name of the idp_id.
-  # See: https://github.com/cloudflare/terraform-provider-cloudflare/issues/2328#issuecomment-1492031130
-  github_idp_name = "GitHub"
-  domain_name     = "${var.subdomain}.${var.cf_zone_name}"
+  domain_name = "${var.subdomain}.${var.cf_zone_name}"
 }
 
 resource "cloudflare_record" "external" {
@@ -27,13 +23,6 @@ resource "cloudflare_record" "external" {
   ttl     = 1
   proxied = true
   comment = "Exposing ${local.domain_name} using tunnel"
-}
-
-data "cloudflare_access_identity_provider" "github" {
-  count = var.restricted ? 1 : 0
-
-  name       = local.github_idp_name
-  account_id = var.cf_account_id
 }
 
 resource "cloudflare_access_application" "app" {
@@ -57,9 +46,6 @@ resource "cloudflare_access_policy" "policy" {
   decision       = "allow"
 
   include {
-    github {
-      name                 = local.github_idp_name
-      identity_provider_id = data.cloudflare_access_identity_provider.github[0].id
-    }
+    group = var.cf_access_groups
   }
 }

@@ -1,11 +1,11 @@
-variable "cf_account_id" {
-  type        = string
-  description = "Cloudflare account id"
-}
-
 variable "cf_zone_name" {
   type        = string
   description = "Name of the cloudflare zone, e.g. mydomain.com"
+}
+
+variable "cf_access_groups" {
+  type        = list(string)
+  description = "List of access group ids to grant access to restricted apps"
 }
 
 variable "tunnel_cname" {

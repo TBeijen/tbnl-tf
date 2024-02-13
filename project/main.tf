@@ -51,6 +51,11 @@ data "aws_ssm_parameter" "secret" {
 locals {
   do_ssh_key_name = "tbnl_ed25519"
 
+  # Specifying here to allow re-use in policy. 
+  # Name used there needs to match actual name of the idp_id.
+  # See: https://github.com/cloudflare/terraform-provider-cloudflare/issues/2328#issuecomment-1492031130
+  github_idp_name = "GitHub"
+
   # Subdomains (of var.extenal_domain) to set up DNS and Access for
   subdomains = [
     {
@@ -128,6 +133,24 @@ data "cloudflare_accounts" "main" {
   name = var.cloudflare_account_name
 }
 
+data "cloudflare_access_identity_provider" "github" {
+  name       = local.github_idp_name
+  account_id = data.cloudflare_accounts.main.accounts[0].id
+}
+
+resource "cloudflare_access_group" "tbnl_admin" {
+  account_id = data.cloudflare_accounts.main.accounts[0].id
+  name       = "TBNL ${var.environment} admins"
+
+  include {
+    email = split(",", data.aws_ssm_parameter.secret["cloudflare_access_email_adresses"].value)
+    github {
+      name                 = local.github_idp_name
+      identity_provider_id = data.cloudflare_access_identity_provider.github.id
+    }
+  }
+}
+
 module "cloudflare_app" {
   for_each = {
     for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain
@@ -135,9 +158,9 @@ module "cloudflare_app" {
 
   source = "../modules/cf_tunneled_app"
 
-  cf_account_id = data.cloudflare_accounts.main.accounts[0].id
-  cf_zone_name  = var.external_domain
-  tunnel_cname  = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
-  subdomain     = each.value.name
-  restricted    = try(each.value.restricted, false)
+  cf_zone_name     = var.external_domain
+  cf_access_groups = [cloudflare_access_group.tbnl_admin.id]
+  tunnel_cname     = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
+  subdomain        = each.value.name
+  restricted       = try(each.value.restricted, false)
 }
