@@ -51,9 +51,16 @@ aws ssm get-parameters-by-path --path '/tbnl-tf/prod/' --with-decryption --recur
 ```
 
 Cloudflare tunnel
+
 ```sh
 cloudflared tunnel create prod-poc-1
 cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
+```
+
+Force sync ESO secret
+
+```sh
+kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 ```
 
 ## TODO
@@ -66,21 +73,30 @@ cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
 * ✅ Use helm for app-of-apps: Better propagating of values
 * ✅ When using helm, make branch to track a variable. Use in cloud-init and propagate through apps
 * ✅ ESO + secret 0
-* Provision example secret as part of cloudserver
+* ✅ Provision example secret as part of cloudserver
 * Argo notifications
 * Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
 * ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * ~~Cert manager for internal ingresses (lets-encrypt, DNS challenge)~~ (prod rate limit 50/wk, tricky when developing)
-* Monitoring, New Relic: https://newrelic.com/pricing (would like to try DataDog free tier, but 1d retention vs 8d NR is big drawback: https://www.datadoghq.com/pricing/)
+* Monitoring, options:
+
+    * New Relic: https://newrelic.com/pricing (would like to try DataDog free tier, but 1d retention vs 8d NR is big drawback: https://www.datadoghq.com/pricing/)
+    * Grafana cloud
+    * https://thenewstack.io/how-to-monitor-kubernetes-k3s-using-telegraf-and-influxdb-cloud/
+    * Honeycomb
+
 * Look into specifying the certificate to use: 
 
     * https://doc.traefik.io/traefik/https/tls/#tls-options
     * https://traefik.io/blog/https-on-kubernetes-using-traefik-proxy/
 
 * ✅ Cloudflare tunnel
-* DNS blue/green toggling
+* ✅ DNS blue/green toggling
+* Set timeout on ArgoCD failed sync (e.g. namescape create overlooked. Keeps waiting for something that will never happen)
 * Application pipelines (blog, anno2003)
-* LeafCloud server instead of DO
+* Argo project for user applications
+* Application www referincing separate gitops repo
+* LeafCloud/Hetzner/Arubacloud server instead of DO
 
 ## V2
 
@@ -137,7 +153,7 @@ cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
     * Passwordless keycloak
     * Possible to backup/migrate keycloak users? -> Seed users via something like https://candrews.integralblue.com/2021/09/users-and-client-secrets-in-keycloak-realm-exports/
 
-## Findings
+## Findings / Issues
 
 * Propagating variables through kustomize is hard/impossible
 
@@ -145,3 +161,5 @@ cat /Users/tibobeijen/.cloudflared/b7456fee-908e-43cc-b96f-92dbfe60167f.json
     * Passing annotations from Application to Application and then have replacement use it seems not possible. Setting commonAnnotations can't read from the metadata as an ApplicationSet can.
 
 * Adding `spec.source.kustomize.patches` causes parent app-of-apps Application to alternate between sync/outOfSync. Somehow the kustomize block ends up in the actual parent Application's actual state.
+* Honeycomb API key only seems to work on US API, not EU. Can't find anything about geo in UI.
+* Externalsecret that was originally misconfigured, remains in state Degraded, even if it has synced succesfully

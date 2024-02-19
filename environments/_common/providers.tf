@@ -22,7 +22,7 @@ locals {
     },
 
     { for name in [
-      "grafana-cloud"
+      "honeycomb_api_key"
       ] : name => "/${local.project}/${local.environment}/cluster-secret/${name}"
     }
   )
