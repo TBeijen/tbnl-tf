@@ -87,3 +87,9 @@ variable "cloud" {
     error_message = "Cloud must be any of the supported clouds: [digital_ocean]"
   }
 }
+
+variable "cloud_settings" {
+  type        = map(any)
+  default     = {}
+  description = "Settings specific for this cloud type, e.g. instance type."
+}

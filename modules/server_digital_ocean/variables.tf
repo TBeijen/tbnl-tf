@@ -9,6 +9,18 @@ variable "name" {
   description = "Server name. Expected to be unique, so should contain environment and/or unique parts if applicable."
 }
 
+variable "monitoring" {
+  type        = bool
+  default     = true
+  description = "Set to true to enable installing monitoring agent"
+}
+
+variable "instance_type" {
+  type        = string
+  default     = "s-1vcpu-2gb"
+  description = "Droplet type"
+}
+
 variable "ssh_key_name" {
   type        = string
   default     = ""

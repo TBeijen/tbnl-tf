@@ -119,6 +119,7 @@ module "server" {
   name                    = each.key
   environment             = var.environment
   cloud                   = each.value.cloud
+  cloud_settings          = try(each.value.cloud_settings[each.value.cloud], {})
   ssh_key_name            = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
   pushover_user_key       = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token      = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value

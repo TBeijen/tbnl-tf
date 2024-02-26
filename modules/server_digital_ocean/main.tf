@@ -22,12 +22,13 @@ data "digitalocean_ssh_key" "default" {
 resource "digitalocean_droplet" "default" {
   count = var.enabled ? 1 : 0
 
-  image     = data.digitalocean_image.ubuntu_22_04[0].id
-  name      = var.name
-  region    = "ams2"
-  size      = "s-1vcpu-2gb"
-  ssh_keys  = var.ssh_key_name != "" ? [data.digitalocean_ssh_key.default[0].fingerprint] : []
-  user_data = var.user_data
+  image      = data.digitalocean_image.ubuntu_22_04[0].id
+  name       = var.name
+  region     = "ams2"
+  size       = var.instance_type
+  ssh_keys   = var.ssh_key_name != "" ? [data.digitalocean_ssh_key.default[0].fingerprint] : []
+  user_data  = var.user_data
+  monitoring = var.monitoring
 
   lifecycle {
     ignore_changes = [user_data]
