@@ -65,6 +65,12 @@ locals {
       var.cloud == "digital_ocean" ? [module.digital_ocean_server.ipv4_address_public] : [],
     ), 0)
   }
+
+  # Merge passed in vars on top of defaults
+  effective_digital_ocean_settings = merge({
+    instance_type = "s-1vcpu-2gb"
+    monitoring    = true
+  }, var.cloud_settings)
 }
 
 
@@ -314,6 +320,6 @@ module "digital_ocean_server" {
   ssh_key_name = var.ssh_key_name
   user_data    = local.user_data
   # cloud specific settings
-  instance_type = try(var.cloud_settings["instance_type"], null)
-  monitoring    = try(var.cloud_settings["monitoring"], null)
+  instance_type = local.effective_digital_ocean_settings["instance_type"]
+  monitoring    = local.effective_digital_ocean_settings["monitoring"]
 }

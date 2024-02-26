@@ -11,13 +11,11 @@ variable "name" {
 
 variable "monitoring" {
   type        = bool
-  default     = true
   description = "Set to true to enable installing monitoring agent"
 }
 
 variable "instance_type" {
   type        = string
-  default     = "s-1vcpu-2gb"
   description = "Droplet type"
 }
 
