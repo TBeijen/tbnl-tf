@@ -14,6 +14,7 @@ locals {
       "cloudflare",
       "cloudflare_access_email_adresses",
       "digital_ocean",
+      "hetzner",
       "tailscale_client_id",
       "tailscale_client_secret",
       "pushover_user_key",
