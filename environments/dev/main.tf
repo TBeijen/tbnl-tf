@@ -45,19 +45,18 @@ module "tbnl" {
 
   cloud_servers = {
     blue = {
-      enabled = true
+      enabled = false
       cloud   = "digital_ocean"
       cloud_settings = {
         digital_ocean = {
-          #   instance_type = "s-1vcpu-2gb"
           instance_type = "s-2vcpu-4gb"
-          monitoring    = true
         }
       }
     }
     green = {
-      enabled = false
-      cloud   = "digital_ocean"
+      enabled        = false
+      cloud          = "digital_ocean"
+      cloud_settings = {}
     }
   }
   active_server = "blue"

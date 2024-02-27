@@ -66,7 +66,7 @@ locals {
     ), 0)
   }
 
-  # Merge passed in vars on top of defaults
+  # Merge passed in vars on top of cloud-specific defaults
   effective_digital_ocean_settings = merge({
     instance_type = "s-1vcpu-2gb"
     monitoring    = true

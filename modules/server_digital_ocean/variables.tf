@@ -21,8 +21,8 @@ variable "instance_type" {
 
 variable "ssh_key_name" {
   type        = string
-  default     = ""
-  description = "Leave empty to not add a ssh key"
+  default     = "tbnl_ed25519"
+  description = "Key that will be used (set manually in console)"
 }
 
 variable "user_data" {

@@ -49,8 +49,6 @@ data "aws_ssm_parameter" "secret" {
 }
 
 locals {
-  do_ssh_key_name = "tbnl_ed25519"
-
   # Specifying here to allow re-use in policy. 
   # Name used there needs to match actual name of the idp_id.
   # See: https://github.com/cloudflare/terraform-provider-cloudflare/issues/2328#issuecomment-1492031130
@@ -100,15 +98,6 @@ resource "terraform_data" "validate_servers" {
 # Cloud server(s)
 # ===============
 #
-
-# Set digital ocean key
-resource "digitalocean_ssh_key" "default" {
-  count = var.do_provision_ssh_key == true ? 1 : 0
-
-  name       = local.do_ssh_key_name
-  public_key = file(pathexpand("~/.ssh/id_ed25519.pub"))
-}
-
 module "server" {
   for_each = var.cloud_servers
 
@@ -120,7 +109,6 @@ module "server" {
   environment             = var.environment
   cloud                   = each.value.cloud
   cloud_settings          = try(each.value.cloud_settings[each.value.cloud], {})
-  ssh_key_name            = var.do_provision_ssh_key == true ? digitalocean_ssh_key.default[0].name : local.do_ssh_key_name
   pushover_user_key       = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token      = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
   external_domain         = var.external_domain

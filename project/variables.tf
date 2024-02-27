@@ -27,8 +27,9 @@ variable "project_secrets" {
 
 variable "cloud_servers" {
   type = map(object({
-    enabled = bool
-    cloud   = string
+    enabled        = bool
+    cloud          = string
+    cloud_settings = any
   }))
   validation {
     condition     = toset(keys(var.cloud_servers)) == toset(["blue", "green"])
