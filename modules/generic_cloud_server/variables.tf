@@ -83,8 +83,8 @@ variable "cloud" {
   type        = string
   description = "String indicating cloud type"
   validation {
-    condition     = contains(["digital_ocean"], var.cloud)
-    error_message = "Cloud must be any of the supported clouds: [digital_ocean]"
+    condition     = contains(["digital_ocean", "hetzner"], var.cloud)
+    error_message = "Cloud must be any of the supported clouds: [digital_ocean, hetzner]"
   }
 }
 

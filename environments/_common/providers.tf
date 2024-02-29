@@ -49,6 +49,10 @@ provider "digitalocean" {
   token = data.aws_ssm_parameter.secret["digital_ocean"].value
 }
 
+provider "hcloud" {
+  token = data.aws_ssm_parameter.secret["hetzner"].value
+}
+
 provider "tailscale" {
   oauth_client_id     = data.aws_ssm_parameter.secret["tailscale_client_id"].value
   oauth_client_secret = data.aws_ssm_parameter.secret["tailscale_client_secret"].value

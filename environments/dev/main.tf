@@ -13,6 +13,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.30.0"
     }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.45.0"
+    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = "~> 0.13.10"
@@ -54,10 +58,10 @@ module "tbnl" {
       }
     }
     green = {
-      enabled        = false
-      cloud          = "digital_ocean"
+      enabled        = true
+      cloud          = "hetzner"
       cloud_settings = {}
     }
   }
-  active_server = "blue"
+  active_server = "green"
 }
