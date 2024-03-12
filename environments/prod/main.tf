@@ -13,6 +13,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.30.0"
     }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.45.0"
+    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = "~> 0.13.10"
@@ -41,17 +45,19 @@ module "tbnl" {
   state_bucket         = "248624703507-tfstate"
   state_dynamodb_table = "tfstate-tbnl-tf-prod"
   project_secrets      = local.project_secrets
-
-  do_provision_ssh_key = true
+  external_domain      = "tibobeijen.nl"
 
   cloud_servers = {
     blue = {
-      enabled = false
-      cloud   = "digital_ocean"
+      enabled        = false
+      cloud          = "hetzner"
+      cloud_settings = {}
     }
     green = {
-      enabled = true
-      cloud   = "digital_ocean"
+      enabled        = false
+      cloud          = "hetzner"
+      cloud_settings = {}
     }
   }
+  active_server = "blue"
 }

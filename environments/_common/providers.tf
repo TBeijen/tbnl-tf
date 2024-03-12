@@ -23,7 +23,8 @@ locals {
     },
 
     { for name in [
-      "honeycomb_api_key"
+      "honeycomb_api_key",
+      "newrelic_license_key"
       ] : name => "/${local.project}/${local.environment}/cluster-secret/${name}"
     }
   )

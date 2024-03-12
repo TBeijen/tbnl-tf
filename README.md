@@ -75,10 +75,10 @@ kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 * ✅ ESO + secret 0
 * ✅ Provision example secret as part of cloudserver
 * Argo notifications
-* Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
+* ✅ Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
 * ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * ~~Cert manager for internal ingresses (lets-encrypt, DNS challenge)~~ (prod rate limit 50/wk, tricky when developing)
-* Monitoring, options:
+* ✅ Monitoring, options:
 
     * New Relic: https://newrelic.com/pricing (would like to try DataDog free tier, but 1d retention vs 8d NR is big drawback: https://www.datadoghq.com/pricing/)
     * Grafana cloud
@@ -97,6 +97,14 @@ kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 * Argo project for user applications
 * Application www referincing separate gitops repo
 * LeafCloud/Hetzner/Arubacloud server instead of DO
+* GH issues cloudflare tunnel helm chart
+
+    * named ports not supported
+    * Misconfig ends up with all pods crashloop. No maxUnavail? Or health check?
+
+* Filter out traefik ping logs from OTEL collector
+
+    * Or configure in Traefik when available: https://github.com/traefik/traefik/pull/9633
 
 ## V2
 

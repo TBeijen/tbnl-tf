@@ -35,3 +35,4 @@ terraform.rc
 
 # Ignore scratch dir
 .temp/
+.charts
