@@ -22,5 +22,6 @@ aws ssm get-parameters-by-path --path "${kube_ssm_path}" |jq -r .Parameters[].Na
     echo $(basename $CONF)
     aws ssm get-parameter --name ${CONF} --with-decryption --output json \
         | jq -r .Parameter.Value \
-        > "${kube_config_path}/$(basename $CONF)" 
+        > "${kube_config_path}/$(basename $CONF)"
+    chmod 0600 "${kube_config_path}/$(basename $CONF)"
 done

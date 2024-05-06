@@ -40,6 +40,14 @@ write_files:
     [default]
     aws_access_key_id = ${aws_access_key_id}
     aws_secret_access_key = ${aws_secret_access_key}
+- path: /etc/rancher/k3s/config.yaml
+  owner: root:root
+  permissions: '0644'
+  content: |
+    kubelet-arg:
+      - "kube-reserved=cpu=100m,memory=100Mi,ephemeral-storage=1Gi"
+      - "system-reserved=cpu=100m, memory=100Mi,ephemeral-storage=1Gi"
+      - "eviction-hard=memory.available<200Mi,nodefs.available<10%"
 
 runcmd:
   # Systemd setup

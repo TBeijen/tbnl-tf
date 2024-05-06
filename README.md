@@ -96,7 +96,11 @@ kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 * Application pipelines (blog, anno2003)
 * Argo project for user applications
 * Application www referincing separate gitops repo
-* LeafCloud/Hetzner/Arubacloud server instead of DO
+* ✅ LeafCloud/Hetzner/Arubacloud server instead of DO
+* K3S Resource tuning
+
+    * https://devops.stackexchange.com/questions/16070/where-does-k3s-store-its-var-lib-kubelet-config-yaml-file
+
 * GH issues cloudflare tunnel helm chart
 
     * named ports not supported
@@ -105,6 +109,17 @@ kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 * Filter out traefik ping logs from OTEL collector
 
     * Or configure in Traefik when available: https://github.com/traefik/traefik/pull/9633
+
+* Cloudflare metrics dropped by NR prometheus agent
+
+    * https://docs.newrelic.com/docs/infrastructure/prometheus-integrations/install-configure-prometheus-agent/troubleshooting-guide/
+    * `k -n newrelic exec newrelic-newrelic-prometheus-agent-0 -- wget -O - 'localhost:9090/api/v1/targets?state=dropped' 2>/dev/null |jq`
+
+* Configure system/kubelet reserved memory (evict pods before vm saturated)
+
+    * https://github.com/k3s-io/k3s/issues/5488
+    * https://devops.stackexchange.com/questions/16070/where-does-k3s-store-its-var-lib-kubelet-config-yaml-file
+
 
 ## V2
 
@@ -160,6 +175,13 @@ kubectl annotate es my-es force-sync=$(date +%s) --overwrite
     * Via keycloak?
     * Passwordless keycloak
     * Possible to backup/migrate keycloak users? -> Seed users via something like https://candrews.integralblue.com/2021/09/users-and-client-secrets-in-keycloak-realm-exports/
+
+* Talos/SUSE on Hetzner
+
+     * https://github.com/kube-hetzner/terraform-hcloud-kube-hetzner
+     * https://github.com/hcloud-talos/terraform-hcloud-talos?tab=readme-ov-file
+     * https://www.talos.dev/v1.6/talos-guides/install/cloud-platforms/hetzner/
+     * https://www.reddit.com/r/kubernetes/comments/1b8wb22/there_are_only_12_binaries_in_talos_linux/
 
 ## Findings / Issues
 

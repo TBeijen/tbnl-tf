@@ -48,20 +48,25 @@ module "tbnl" {
   external_domain      = "tibobeijen.net"
 
   cloud_servers = {
+    # blue = {
+    #   enabled = false
+    #   cloud   = "digital_ocean"
+    #   cloud_settings = {
+    #     digital_ocean = {
+    #       instance_type = "s-2vcpu-4gb"
+    #     }
+    #   }
+    # }
     blue = {
-      enabled = false
-      cloud   = "digital_ocean"
-      cloud_settings = {
-        digital_ocean = {
-          instance_type = "s-2vcpu-4gb"
-        }
-      }
-    }
-    green = {
       enabled        = true
       cloud          = "hetzner"
       cloud_settings = {}
     }
+    green = {
+      enabled        = false
+      cloud          = "hetzner"
+      cloud_settings = {}
+    }
   }
-  active_server = "green"
+  active_server = "blue"
 }
