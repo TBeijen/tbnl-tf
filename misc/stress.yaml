@@ -1,0 +1,59 @@
+---
+# Deploy
+#   kubectl apply -f stress.yaml
+#
+# Port forward to local, e.g.
+#   kubectl port-forward service/stress-app 12345:8080
+
+# Consume memory or cpu
+#     curl http://127.0.0.1:12345/ConsumeMem -s --data "megabytes=100&durationSec=120"
+#
+# See what breaks...
+# 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stress-app
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: stress
+      app.kubernetes.io/name: app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: stress
+        app.kubernetes.io/name: app
+    spec:
+      containers:
+      - image: gcr.io/kubernetes-e2e-test-images/resource-consumer:1.5
+        imagePullPolicy: IfNotPresent
+        name: consumer
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+
+---
+# Exists mostly for convenience to avoid having to lookup pod name
+apiVersion: v1
+kind: Service
+metadata:
+  name: stress-app
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: stress
+    app.kubernetes.io/name: app
+

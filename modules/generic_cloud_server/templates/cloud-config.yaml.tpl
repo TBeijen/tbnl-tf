@@ -102,6 +102,7 @@ runcmd:
   - |
     curl -s "${argocd_app_of_apps_source}" \
         | sed 's/__ENVIRONMENT__/${environment}/g' \
+        | sed 's/__NAME__/${name}/g' \
         | sed 's/__CLUSTER_NAME__/${cluster_name}/g' \
         | sed 's/__TARGET_REVISION__/${target_revision}/g' \
         | sed 's/__EXTERNAL_DOMAIN__/${external_domain}/g' \

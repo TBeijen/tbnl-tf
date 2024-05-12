@@ -153,3 +153,12 @@ module "cloudflare_app" {
   subdomain        = each.value.name
   restricted       = try(each.value.restricted, false)
 }
+
+# Cloudflare rules
+# ================
+#
+module "cloudflare_zone_config" {
+  source = "../modules/cf_zone_config"
+
+  cf_zone_name = var.external_domain
+}

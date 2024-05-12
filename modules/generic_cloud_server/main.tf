@@ -48,6 +48,7 @@ locals {
     aws_secret_access_key     = try(aws_iam_access_key.cloud_server_access_key[0].secret, "")
     aws_ssm_target_kubeconfig = local.aws_ssm_target_kubeconfig_path
     environment               = var.environment
+    name                      = var.name
     cluster_name              = local.cluster_name
     instance_name             = local.instance_name
     target_revision           = var.target_revision
