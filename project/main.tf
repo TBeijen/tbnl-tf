@@ -140,6 +140,25 @@ resource "cloudflare_access_group" "tbnl_admin" {
   }
 }
 
+resource "cloudflare_access_service_token" "tbnl_health_checks" {
+  account_id           = data.cloudflare_accounts.main.accounts[0].id
+  name                 = "TBNL ${var.environment} health checks"
+  duration             = "8760h"
+  min_days_for_renewal = 60
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "cloudflare_access_group" "tbnl_health_checks" {
+  account_id = data.cloudflare_accounts.main.accounts[0].id
+  name       = "TBNL ${var.environment} health checks"
+
+  include {
+    service_token = [cloudflare_access_service_token.tbnl_health_checks.id]
+  }
+}
+
 module "cloudflare_app" {
   for_each = {
     for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain
@@ -147,11 +166,13 @@ module "cloudflare_app" {
 
   source = "../modules/cf_tunneled_app"
 
-  cf_zone_name     = var.external_domain
-  cf_access_groups = [cloudflare_access_group.tbnl_admin.id]
-  tunnel_cname     = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
-  subdomain        = each.value.name
-  restricted       = try(each.value.restricted, false)
+  cf_zone_name = var.external_domain
+  tunnel_cname = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
+  subdomain    = each.value.name
+  restricted   = try(each.value.restricted, false)
+
+  cf_access_groups        = [cloudflare_access_group.tbnl_admin.id]
+  cf_access_groups_health = [cloudflare_access_group.tbnl_health_checks.id]
 }
 
 # Cloudflare rules

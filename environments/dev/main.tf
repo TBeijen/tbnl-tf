@@ -58,15 +58,15 @@ module "tbnl" {
     #   }
     # }
     blue = {
-      enabled        = true
-      cloud          = "hetzner"
-      cloud_settings = {}
-    }
-    green = {
       enabled        = false
       cloud          = "hetzner"
       cloud_settings = {}
     }
+    green = {
+      enabled        = true
+      cloud          = "hetzner"
+      cloud_settings = {}
+    }
   }
-  active_server = "blue"
+  active_server = "green"
 }

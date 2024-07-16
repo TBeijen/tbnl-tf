@@ -8,6 +8,11 @@ variable "cf_access_groups" {
   description = "List of access group ids to grant access to restricted apps"
 }
 
+variable "cf_access_groups_health" {
+  type        = list(string)
+  description = "List of non-identity access group ids representing health checks"
+}
+
 variable "tunnel_cname" {
   type        = string
   description = "Cname of the cloudflare tunnel that should be used for the subdomain"

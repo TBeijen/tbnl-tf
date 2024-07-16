@@ -63,6 +63,12 @@ Force sync ESO secret
 kubectl annotate es my-es force-sync=$(date +%s) --overwrite
 ```
 
+Get Cloudflare access service_account
+
+```sh
+terraform show -json | jq '.values.root_module.child_modules[] | select(.address == "module.tbnl") | .resources[] | select(.address = "module.tbnl.cloudflare_access_service_token.tbnl_health_checks")'
+```
+
 ## TODO
 
 * ✅ Adapt and write kubeconfig to allow use outside of VM (using tailscale hostname as server)

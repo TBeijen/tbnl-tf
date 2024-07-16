@@ -36,7 +36,7 @@ resource "cloudflare_access_application" "app" {
   auto_redirect_to_identity = false
 }
 
-resource "cloudflare_access_policy" "policy" {
+resource "cloudflare_access_policy" "default" {
   count = var.restricted ? 1 : 0
 
   application_id = cloudflare_access_application.app[0].id
@@ -47,5 +47,19 @@ resource "cloudflare_access_policy" "policy" {
 
   include {
     group = var.cf_access_groups
+  }
+}
+
+resource "cloudflare_access_policy" "health" {
+  count = var.restricted ? 1 : 0
+
+  application_id = cloudflare_access_application.app[0].id
+  zone_id        = data.cloudflare_zone.default.id
+  name           = "Allow from health check"
+  precedence     = "2"
+  decision       = "non_identity"
+
+  include {
+    group = var.cf_access_groups_health
   }
 }
