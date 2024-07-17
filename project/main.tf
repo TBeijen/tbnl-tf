@@ -63,6 +63,7 @@ locals {
     {
       name       = "www-test",
       restricted = true
+      monitor    = true
     },
     {
       name       = "podinfo",
@@ -182,4 +183,26 @@ module "cloudflare_zone_config" {
   source = "../modules/cf_zone_config"
 
   cf_zone_name = var.external_domain
+}
+
+module "monitor" {
+  for_each = {
+    for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain if try(subdomain.monitor, false) == true
+  }
+
+  source = "../modules/nr_monitor"
+
+  zone_name = var.external_domain
+  subdomain = each.value.name
+
+  headers = [
+    {
+      key   = "CF-Access-Client-Id"
+      value = cloudflare_access_service_token.tbnl_health_checks.client_id
+    },
+    {
+      key   = "CF-Access-Client-Secret"
+      value = cloudflare_access_service_token.tbnl_health_checks.client_secret
+    }
+  ]
 }
