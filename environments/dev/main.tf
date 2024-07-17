@@ -17,6 +17,10 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "~> 1.45.0"
     }
+    newrelic = {
+      source  = "newrelic/newrelic"
+      version = "~> 3.40.0"
+    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = "~> 0.13.10"

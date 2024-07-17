@@ -15,13 +15,13 @@ locals {
       "cloudflare_access_email_adresses",
       "digital_ocean",
       "hetzner",
-      "tailscale_client_id",
-      "tailscale_client_secret",
+      "newrelic_api_key",
       "pushover_user_key",
       "pushover_api_key_tbnl_infra",
+      "tailscale_client_id",
+      "tailscale_client_secret",
       ] : name => "/${local.project}/${local.environment}/secret/${name}"
     },
-
     { for name in [
       "honeycomb_api_key",
       "newrelic_license_key"
@@ -52,6 +52,12 @@ provider "digitalocean" {
 
 provider "hcloud" {
   token = data.aws_ssm_parameter.secret["hetzner"].value
+}
+
+provider "newrelic" {
+  account_id = "4355133"
+  api_key    = data.aws_ssm_parameter.secret["newrelic_api_key"].value
+  region     = "EU"
 }
 
 provider "tailscale" {
