@@ -21,7 +21,10 @@ resource "cloudflare_ruleset" "cache_rules_everything" {
   phase       = "http_request_cache_settings"
 
   rules {
-    action = "set_cache_settings"
+    action      = "set_cache_settings"
+    description = "Cache everything (also HTML)"
+    expression  = "(starts_with(http.request.uri, \"/\"))"
+    enabled     = true
     action_parameters {
       edge_ttl {
         # Let response headers control cache ttl
@@ -44,9 +47,23 @@ resource "cloudflare_ruleset" "cache_rules_everything" {
       }
       origin_error_page_passthru = false
     }
+  }
 
-    expression  = "(starts_with(http.request.uri, \"/\"))"
-    description = "Cache everything (also HTML)"
+  rules {
+    action      = "set_cache_settings"
+    description = "Cache health checks briefly (hit origin while avoiding hammering)"
+    expression  = "(any(http.request.headers[\"health-check\"][*] eq \"true\"))"
     enabled     = true
+
+    action_parameters {
+      cache = true
+      edge_ttl {
+        default = 10
+        mode    = "override_origin"
+      }
+      browser_ttl {
+        mode = "bypass"
+      }
+    }
   }
 }

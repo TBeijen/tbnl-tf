@@ -50,6 +50,10 @@ resource "cloudflare_access_policy" "default" {
   }
 }
 
+# Best would be to create a separate application, restricted to the health check path.
+# Then only for that application, allow the access group that includes the non-identity service token.
+#
+# Since the service token ends up in monitor configuration, this reduces the impact of the token accidentally being exposed.
 resource "cloudflare_access_policy" "health" {
   count = var.restricted ? 1 : 0
 

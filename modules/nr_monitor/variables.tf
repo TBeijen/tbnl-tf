@@ -8,6 +8,23 @@ variable "subdomain" {
   description = "Subdomain (of zone_name)"
 }
 
+variable "environment" {
+  type        = string
+  description = "Environment. Will be added to tags"
+}
+
+variable "uri" {
+  type        = string
+  default     = "/"
+  description = "Uri to fetch"
+}
+
+variable "status" {
+  type        = string
+  default     = "ENABLED"
+  description = "Monitor status (set to DISABLED if no server active for environment)"
+}
+
 variable "headers" {
   type = list(object({
     key   = string

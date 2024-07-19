@@ -81,6 +81,7 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
 * ✅ ESO + secret 0
 * ✅ Provision example secret as part of cloudserver
 * Argo notifications
+* Argo trigger on GitHub webhook
 * ✅ Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
 * ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * ~~Cert manager for internal ingresses (lets-encrypt, DNS challenge)~~ (prod rate limit 50/wk, tricky when developing)
@@ -98,12 +99,13 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
 
 * ✅ Cloudflare tunnel
 * ✅ DNS blue/green toggling
+* Separate CF Access Application for health check
 * Set timeout on ArgoCD failed sync (e.g. namescape create overlooked. Keeps waiting for something that will never happen)
 * Application pipelines (blog, anno2003)
 * Argo project for user applications
-* Application www referincing separate gitops repo
+* Application www referencing separate gitops repo
 * ✅ LeafCloud/Hetzner/Arubacloud server instead of DO
-* K3S Resource tuning
+* ✅ K3S Resource tuning
 
     * https://devops.stackexchange.com/questions/16070/where-does-k3s-store-its-var-lib-kubelet-config-yaml-file
 
@@ -121,7 +123,7 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
     * https://docs.newrelic.com/docs/infrastructure/prometheus-integrations/install-configure-prometheus-agent/troubleshooting-guide/
     * `k -n newrelic exec newrelic-newrelic-prometheus-agent-0 -- wget -O - 'localhost:9090/api/v1/targets?state=dropped' 2>/dev/null |jq`
 
-* Configure system/kubelet reserved memory (evict pods before vm saturated)
+* ✅ Configure system/kubelet reserved memory (evict pods before vm saturated)
 
     * https://github.com/k3s-io/k3s/issues/5488
     * https://devops.stackexchange.com/questions/16070/where-does-k3s-store-its-var-lib-kubelet-config-yaml-file

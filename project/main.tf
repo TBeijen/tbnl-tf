@@ -61,9 +61,10 @@ locals {
       restricted = var.environment == "prod" ? false : true
     },
     {
-      name       = "www-test",
-      restricted = true
-      monitor    = true
+      name        = "www-test",
+      restricted  = true
+      monitor     = true
+      monitor_uri = "/robots.txt?nr-health-check"
     },
     {
       name       = "podinfo",
@@ -73,6 +74,7 @@ locals {
 
   servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
   setup_dns_apps       = (length(local.servers_enabled_keys) > 0)
+  monitors_enabled     = (length(local.servers_enabled_keys) > 0)
   target_tunnel_cname  = module.server[var.active_server].cloudflare_tunnel_cname
 }
 
@@ -192,8 +194,11 @@ module "monitor" {
 
   source = "../modules/nr_monitor"
 
-  zone_name = var.external_domain
-  subdomain = each.value.name
+  zone_name   = var.external_domain
+  subdomain   = each.value.name
+  uri         = each.value.monitor_uri
+  status      = local.monitors_enabled ? "ENABLED" : "DISABLED"
+  environment = var.environment
 
   headers = [
     {
