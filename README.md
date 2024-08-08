@@ -103,7 +103,7 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
 * Set timeout on ArgoCD failed sync (e.g. namescape create overlooked. Keeps waiting for something that will never happen)
 * Application pipelines (blog, anno2003)
 * Argo project for user applications
-* Application www referencing separate gitops repo
+* ✅ Application www referencing separate gitops repo
 * ✅ LeafCloud/Hetzner/Arubacloud server instead of DO
 * ✅ K3S Resource tuning
 
@@ -128,10 +128,25 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
     * https://github.com/k3s-io/k3s/issues/5488
     * https://devops.stackexchange.com/questions/16070/where-does-k3s-store-its-var-lib-kubelet-config-yaml-file
 
+* ArgoCD notification improvements
+
+    * Set context.argocdUrl
+    * Only send notification when app has actually changed: https://github.com/argoproj/argo-cd/issues/12169
+    * Customize template
+
+* ArgoCD bouncer improvements
+
+    * Bolt on, currently too aggresive. Quirks when argo tries to refresh target state while pods are restarting. Only need reload when cm actually changes.
+    * Consider https://github.com/stakater/Reloader (still bolt on, lots of moving parts)
+    * Consider ArgoCD helm chart, which has mechanism built in via cm sha checksum annotation on deployments
 
 ## V2
 
 * Build image and upload to DO/LeafCloud
+* Talos:
+
+    * https://github.com/hetznercloud/awesome-hcloud
+
 * Cilium:
 
     * https://medium.com/@ebrar/single-node-k3s-installation-with-cilium-and-hubble-f4cbaacd9176

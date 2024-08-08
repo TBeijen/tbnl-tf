@@ -24,7 +24,8 @@ locals {
     },
     { for name in [
       "honeycomb_api_key",
-      "newrelic_license_key"
+      "newrelic_license_key",
+      "argocd_notifications_slack_token"
       ] : name => "/${local.project}/${local.environment}/cluster-secret/${name}"
     }
   )

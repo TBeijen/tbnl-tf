@@ -112,6 +112,7 @@ module "server" {
   environment             = var.environment
   cloud                   = each.value.cloud
   cloud_settings          = try(each.value.cloud_settings[each.value.cloud], {})
+  target_revision         = try(each.value.target_revision, "main")
   pushover_user_key       = data.aws_ssm_parameter.secret["pushover_user_key"].value
   pushover_api_token      = data.aws_ssm_parameter.secret["pushover_api_key_tbnl_infra"].value
   external_domain         = var.external_domain
