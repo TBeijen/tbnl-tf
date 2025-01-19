@@ -98,6 +98,15 @@ locals {
   setup_dns_apps       = (length(local.servers_enabled_keys) > 0)
   monitors_enabled     = (length(local.servers_enabled_keys) > 0)
   target_tunnel_cname  = module.server[var.active_server].cloudflare_tunnel_cname
+
+  slack_alerts_channel = {
+    name = "alerts"
+    id   = "C07GCL5N4F5"
+  }
+  slack_notifications_channel = {
+    name = "notifications"
+    id   = "C05UMQRQZ52"
+  }
 }
 
 # Validate enabled/active flags.
@@ -210,6 +219,24 @@ module "cloudflare_zone_config" {
   cf_zone_name = var.external_domain
 }
 
+# New Relic cluster observability
+# ===============================
+#
+# Alert rules, policies, workflows, etc.
+#
+module "nr_cluster_observability" {
+  source = "../modules/nr_cluster_observability"
+
+  environment = var.environment
+
+  slack_notification_destination_name = "TBNL"
+  slack_prio_channel                  = var.environment == "prod" ? local.slack_alerts_channel : local.slack_notifications_channel
+  slack_noise_channel                 = local.slack_notifications_channel
+}
+
+# New Relic synthetics monitors
+# =============================
+#
 module "monitor" {
   for_each = {
     for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain if try(subdomain.monitor, false) == true
