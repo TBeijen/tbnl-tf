@@ -62,15 +62,15 @@ module "tbnl" {
     #   }
     # }
     blue = {
-      enabled        = false
-      cloud          = "hetzner"
-      cloud_settings = {}
+      enabled         = false
+      cloud           = "hetzner"
+      cloud_settings  = {}
       target_revision = "main"
     }
     green = {
-      enabled        = true
-      cloud          = "hetzner"
-      cloud_settings = {}
+      enabled         = true
+      cloud           = "hetzner"
+      cloud_settings  = {}
       target_revision = "main"
     }
   }

@@ -48,6 +48,28 @@ data "aws_ssm_parameter" "secret" {
   name = each.value
 }
 
+# random secret for gatekeeper-policy-manager
+resource "random_password" "gpm" {
+  length  = 16
+  special = true
+}
+
+module "secret_generated" {
+  source  = "terraform-aws-modules/ssm-parameter/aws"
+  version = "1.1.0"
+
+  for_each = {
+    "gpm" = random_password.gpm.result
+  }
+
+  name                 = "/${var.project}/${var.environment}/cluster-secret/${each.key}"
+  value                = each.value
+  type                 = "SecureString"
+  secure_type          = true
+  description          = "Secret stored in AWS Parameter Store"
+  ignore_value_changes = true
+}
+
 locals {
   # Specifying here to allow re-use in policy. 
   # Name used there needs to match actual name of the idp_id.
