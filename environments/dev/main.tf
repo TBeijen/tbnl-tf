@@ -19,7 +19,7 @@ terraform {
     }
     newrelic = {
       source  = "newrelic/newrelic"
-      version = "~> 3.40.0"
+      version = "~> 3.54.0"
     }
     tailscale = {
       source  = "tailscale/tailscale"

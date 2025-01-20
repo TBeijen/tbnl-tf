@@ -2,7 +2,7 @@ terraform {
   required_providers {
     newrelic = {
       source  = "newrelic/newrelic"
-      version = "~> 3.40.0"
+      version = ">= 3.54.0"
     }
   }
 }
@@ -86,3 +86,27 @@ resource "newrelic_nrql_alert_condition" "pod_isready_deviation" {
   baseline_direction = "lower_only"
 }
 
+resource "newrelic_nrql_alert_condition" "pod_notready" {
+  policy_id                    = newrelic_alert_policy.prio.id
+  type                         = "static"
+  name                         = "tbnl-${var.environment}: pod not ready"
+  enabled                      = true
+  violation_time_limit_seconds = 259200
+
+
+  nrql {
+    query = "SELECT latest(isReady) FROM K8sPodSample WHERE clusterName LIKE 'dev%' AND status NOT IN ('Failed', 'Succeeded') FACET entityName"
+  }
+
+  critical {
+    operator              = "below"
+    threshold             = 1
+    threshold_duration    = 180
+    threshold_occurrences = "all"
+  }
+  fill_option        = "none"
+  aggregation_window = 60
+  aggregation_method = "event_flow"
+  aggregation_delay  = 120
+  title_template     = "Pod not ready"
+}
