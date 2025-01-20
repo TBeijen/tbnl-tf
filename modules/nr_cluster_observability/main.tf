@@ -61,31 +61,6 @@ resource "newrelic_workflow" "prio" {
   }
 }
 
-resource "newrelic_nrql_alert_condition" "pod_isready_deviation" {
-  policy_id                    = newrelic_alert_policy.prio.id
-  type                         = "baseline"
-  name                         = "tbnl-${var.environment}: pod isReady deviation"
-  enabled                      = true
-  violation_time_limit_seconds = 259200
-
-  nrql {
-    query = "SELECT latest(isReady) FROM K8sPodSample WHERE clusterName LIKE '${var.environment}%' FACET entityName"
-  }
-
-  critical {
-    operator              = "above"
-    threshold             = 3
-    threshold_duration    = 300
-    threshold_occurrences = "all"
-  }
-
-  fill_option        = "none"
-  aggregation_window = 60
-  aggregation_method = "event_flow"
-  aggregation_delay  = 120
-  baseline_direction = "lower_only"
-}
-
 resource "newrelic_nrql_alert_condition" "pod_notready" {
   policy_id                    = newrelic_alert_policy.prio.id
   type                         = "static"
@@ -110,3 +85,31 @@ resource "newrelic_nrql_alert_condition" "pod_notready" {
   aggregation_delay  = 120
   title_template     = "Pod not ready"
 }
+
+
+# @TODO Review: Might not be needed, since crashloopbackoff will result in pod not ready, which is already monitored
+#
+# resource "newrelic_nrql_alert_condition" "pod_restarting_manually" {
+#   account_id = 4355133
+#   policy_id = <Your Policy ID>
+#   type = "static"
+#   name = "Pod restarting manually"
+#   enabled = true
+#   violation_time_limit_seconds = 259200
+
+#   nrql {
+#     query = "SELECT max(restartCount) - min(restartCount) AS `Restarts` FROM K8sContainerSample WHERE (((restartCount > 0) AND NOT (reason IS NULL)) AND NOT (restartCount IS NULL)) FACET tuple(containerName AS `Container Name`, podName AS `Pod Name`, clusterName AS `Cluster Name`)"
+#     data_account_id = 4355133
+#   }
+
+#   critical {
+#     operator = "above_or_equals"
+#     threshold = 2
+#     threshold_duration = 120
+#     threshold_occurrences = "at_least_once"
+#   }
+#   fill_option = "none"
+#   aggregation_window = 120
+#   aggregation_method = "event_flow"
+#   aggregation_delay = 120
+# }
