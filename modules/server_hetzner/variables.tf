@@ -14,6 +14,11 @@ variable "instance_type" {
   description = "Server type"
 }
 
+variable "image_name" {
+  type        = string
+  description = "Image to use to provision the server"
+}
+
 variable "ssh_key_name" {
   type        = string
   default     = "tbnl_ed25519_2022"

@@ -82,6 +82,7 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
 * ✅ Provision example secret as part of cloudserver
 * Argo notifications
 * Argo trigger on GitHub webhook
+* Argo sync waves for bootstrapping clusters
 * ✅ Traefik stdout logging. https://qdnqn.com/how-to-configure-traefik-on-k3s/
 * ✅ DNS entry for server on tailnet FQDN (`*.my-server.something-easy CNAME machine-name.blabla.ts.net`)
 * ~~Cert manager for internal ingresses (lets-encrypt, DNS challenge)~~ (prod rate limit 50/wk, tricky when developing)
@@ -98,11 +99,12 @@ terraform show -json | jq '.values.root_module.child_modules[] | select(.address
     * https://traefik.io/blog/https-on-kubernetes-using-traefik-proxy/
 
 * ✅ Cloudflare tunnel
-* ✅ DNS blue/green toggling
+* ✅ DNS blue/green toggling external
+* Blue/green generic fqdns for internal
 * Separate CF Access Application for health check
 * Set timeout on ArgoCD failed sync (e.g. namescape create overlooked. Keeps waiting for something that will never happen)
 * Application pipelines (blog, anno2003)
-* Argo project for user applications
+* Argo projects for system vs. user applications
 * ✅ Application www referencing separate gitops repo
 * ✅ LeafCloud/Hetzner/Arubacloud server instead of DO
 * ✅ K3S Resource tuning

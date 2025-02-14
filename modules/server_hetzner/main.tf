@@ -7,10 +7,10 @@ terraform {
   }
 }
 
-data "hcloud_image" "ubuntu_22_04" {
+data "hcloud_image" "default" {
   count = var.enabled ? 1 : 0
 
-  name              = "ubuntu-22.04"
+  name              = var.image_name
   with_architecture = "x86"
 }
 
@@ -23,7 +23,7 @@ data "hcloud_ssh_key" "default" {
 resource "hcloud_server" "default" {
   count = var.enabled ? 1 : 0
 
-  image       = data.hcloud_image.ubuntu_22_04[0].id
+  image       = data.hcloud_image.default[0].id
   name        = var.name
   location    = "nbg1"
   server_type = var.instance_type

@@ -76,6 +76,7 @@ locals {
 
   effective_hetzner_settings = merge({
     instance_type = "cx21"
+    image_name    = "ubuntu-22.04"
   }, var.cloud_settings)
 
 }
@@ -341,4 +342,5 @@ module "hetzner_server" {
   user_data = local.user_data
   # cloud specific settings
   instance_type = local.effective_hetzner_settings["instance_type"]
+  image_name    = local.effective_hetzner_settings["image_name"]
 }
