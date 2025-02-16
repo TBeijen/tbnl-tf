@@ -9,7 +9,7 @@ if [[ $aws_account == "296093601437" ]]; then
   aws_env=dev
 fi
 if [[ $aws_account == "248624703507" ]]; then
-  aws_env=dev
+  aws_env=prod
 fi
 echo "AWS env = ${aws_env}"
 

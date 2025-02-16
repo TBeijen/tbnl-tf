@@ -62,9 +62,14 @@ module "tbnl" {
     #   }
     # }
     blue = {
-      enabled         = false
-      cloud           = "hetzner"
-      cloud_settings  = {}
+      enabled = true
+      cloud   = "hetzner"
+      cloud_settings = {
+        hetzner = {
+          instance_type = "cx22"
+          image_name    = "ubuntu-24.04"
+        }
+      }
       target_revision = "main"
     }
     green = {

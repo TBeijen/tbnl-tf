@@ -86,7 +86,13 @@ runcmd:
   #
   - |
     export NEEDRESTART_SUSPEND=suspend
-    apt install awscli -y
+    UBUNTU_MAJOR_VERSION=$(lsb_release -rs | cut -d. -f1)
+    if [[ "$UBUNTU_MAJOR_VERSION" -lt 24 ]]; then
+      apt update -y
+      apt install -y awscli
+    else
+      snap install aws-cli --classic
+    fi
   - |
     cat /etc/rancher/k3s/k3s.yaml | sed -E "s/: default/: ${instance_name}/g" | sed -E "s/127.0.0.1/${instance_name}/g" > /root/${instance_name}
   - |
