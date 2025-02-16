@@ -219,19 +219,29 @@ module "cloudflare_zone_config" {
   cf_zone_name = var.external_domain
 }
 
-# New Relic cluster observability
-# ===============================
+# New Relic observability
+# =======================
 #
-# Alert rules, policies, workflows, etc.
+# policies, workflows, etc.
 #
-module "nr_cluster_observability" {
-  source = "../modules/nr_cluster_observability"
+module "nr_workflows" {
+  source = "../modules/nr_workflows"
 
   environment = var.environment
 
   slack_notification_destination_name = "TBNL"
   slack_prio_channel                  = var.environment == "prod" ? local.slack_alerts_channel : local.slack_notifications_channel
   slack_noise_channel                 = local.slack_notifications_channel
+}
+
+# Per env alerts
+#
+module "nr_env_monitoring" {
+  source = "../modules/nr_env_monitoring"
+
+  environment           = var.environment
+  alert_policy_prio_id  = module.nr_workflows.alert_policy_prio_id
+  alert_policy_noise_id = module.nr_workflows.alert_policy_noise_id
 }
 
 # New Relic synthetics monitors
