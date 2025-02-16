@@ -33,3 +33,14 @@ variable "headers" {
   default     = []
   description = "Header key value pairs"
 }
+
+variable "alert_policy_prio_id" {
+  type        = string
+  description = "ID of the alert policy for priority alerts"
+}
+
+variable "alert_policy_noise_id" {
+  type        = string
+  description = "ID of the alert policy for noise alerts"
+}
+

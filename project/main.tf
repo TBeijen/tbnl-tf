@@ -76,8 +76,58 @@ locals {
   # See: https://github.com/cloudflare/terraform-provider-cloudflare/issues/2328#issuecomment-1492031130
   github_idp_name = "GitHub"
 
-  # Subdomains (of var.extenal_domain) to set up DNS and Access for
-  subdomains = [
+  servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
+  setup_dns_apps       = (length(local.servers_enabled_keys) > 0)
+  monitors_enabled     = (length(local.servers_enabled_keys) > 0)
+  active_tunnel_cname  = coalesce(module.server[var.active_server].cloudflare_tunnel_cname, "placeholder-no-tunnel-active")
+
+  # Headers bypass Cloudflare Access, needed for 'restricted' synthetic monitors
+  synthetic_restricted_headers = [
+    {
+      key   = "CF-Access-Client-Id"
+      value = cloudflare_access_service_token.tbnl_health_checks.client_id
+    },
+    {
+      key   = "CF-Access-Client-Secret"
+      value = cloudflare_access_service_token.tbnl_health_checks.client_secret
+    }
+  ]
+
+  # Active subdomains (of var.extenal_domain) to set up DNS and Access for
+  # These are the domains that always point to the active server
+  _active_subdomains = [
+    {
+      name         = "www2",
+      tunnel_cname = local.active_tunnel_cname
+      restricted   = var.environment == "prod" ? false : true
+    },
+    {
+      name         = "www-test",
+      tunnel_cname = local.active_tunnel_cname
+      restricted   = true
+      monitor      = true
+      monitor_uri  = "/robots.txt?nr-health-check"
+    },
+    {
+      name         = "podinfo",
+      tunnel_cname = local.active_tunnel_cname
+      restricted   = true
+    },
+  ]
+
+  per_cluster_subdomains = [for key in local.servers_enabled_keys : {
+    name            = "podinfo-${key}",
+    tunnel_cname    = module.server[key].cloudflare_tunnel_cname
+    restricted      = true
+    monitor         = true
+    monitor_uri     = "/api/info"
+    text_validation = "\"${key}\""
+    }
+  ]
+
+  all_subdomains = concat(local._active_subdomains, local.per_cluster_subdomains)
+
+  active_subdomains = [
     {
       name       = "www2",
       restricted = var.environment == "prod" ? false : true
@@ -94,10 +144,9 @@ locals {
     },
   ]
 
-  servers_enabled_keys = [for key, s in var.cloud_servers : key if s.enabled == true]
-  setup_dns_apps       = (length(local.servers_enabled_keys) > 0)
-  monitors_enabled     = (length(local.servers_enabled_keys) > 0)
-  target_tunnel_cname  = module.server[var.active_server].cloudflare_tunnel_cname
+  # Subdomains specific to a cluster. This will always use the tunnel for _that_ cluster.
+  # Used for synthetic monitoring that targets a specific cluster.
+
 
   slack_alerts_channel = {
     name = "alerts"
@@ -196,13 +245,13 @@ resource "cloudflare_access_group" "tbnl_health_checks" {
 
 module "cloudflare_app" {
   for_each = {
-    for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain
+    for subdomain in local.all_subdomains : "${subdomain.name}-${var.environment}" => subdomain
   }
 
   source = "../modules/cf_tunneled_app"
 
   cf_zone_name = var.external_domain
-  tunnel_cname = coalesce(local.target_tunnel_cname, "placeholder-no-tunnel-active")
+  tunnel_cname = each.value.tunnel_cname
   subdomain    = each.value.name
   restricted   = try(each.value.restricted, false)
 
@@ -244,23 +293,24 @@ module "nr_env_monitoring" {
   alert_policy_noise_id = module.nr_workflows.alert_policy_noise_id
 }
 
-# New Relic synthetics monitors
-# =============================
+# Synthetic monitors
 #
-module "monitor" {
+module "nr_synthetic" {
   for_each = {
-    for subdomain in local.subdomains : "${subdomain.name}-${var.environment}" => subdomain if try(subdomain.monitor, false) == true
+    for subdomain in local.all_subdomains : "${subdomain.name}-${var.environment}" => subdomain if try(subdomain.monitor, false) == true
   }
 
-  source = "../modules/nr_monitor"
+  source = "../modules/nr_synthetic"
 
-  zone_name   = var.external_domain
-  subdomain   = each.value.name
-  uri         = each.value.monitor_uri
-  status      = local.monitors_enabled ? "ENABLED" : "DISABLED"
-  environment = var.environment
+  zone_name             = var.external_domain
+  subdomain             = each.value.name
+  uri                   = each.value.monitor_uri
+  status                = local.monitors_enabled ? "ENABLED" : "DISABLED"
+  environment           = var.environment
+  alert_policy_prio_id  = module.nr_workflows.alert_policy_prio_id
+  alert_policy_noise_id = module.nr_workflows.alert_policy_noise_id
 
-  headers = [
+  headers = each.value.restricted ? [
     {
       key   = "CF-Access-Client-Id"
       value = cloudflare_access_service_token.tbnl_health_checks.client_id
@@ -269,5 +319,33 @@ module "monitor" {
       key   = "CF-Access-Client-Secret"
       value = cloudflare_access_service_token.tbnl_health_checks.client_secret
     }
-  ]
+  ] : []
 }
+
+# # New Relic synthetics monitors
+# # =============================
+# #
+# module "monitor" {
+#   for_each = {
+#     for subdomain in local.active_subdomains : "${subdomain.name}-${var.environment}" => subdomain if try(subdomain.monitor, false) == true
+#   }
+
+#   source = "../modules/nr_synthetic"
+
+#   zone_name   = var.external_domain
+#   subdomain   = each.value.name
+#   uri         = each.value.monitor_uri
+#   status      = local.monitors_enabled ? "ENABLED" : "DISABLED"
+#   environment = var.environment
+
+#   headers = [
+#     {
+#       key   = "CF-Access-Client-Id"
+#       value = cloudflare_access_service_token.tbnl_health_checks.client_id
+#     },
+#     {
+#       key   = "CF-Access-Client-Secret"
+#       value = cloudflare_access_service_token.tbnl_health_checks.client_secret
+#     }
+#   ]
+# }
