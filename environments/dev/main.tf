@@ -73,11 +73,11 @@ module "tbnl" {
       target_revision = "main"
     }
     green = {
-      enabled         = true
+      enabled         = false
       cloud           = "hetzner"
       cloud_settings  = {}
       target_revision = "main"
     }
   }
-  active_server = "green"
+  active_server = "blue"
 }
